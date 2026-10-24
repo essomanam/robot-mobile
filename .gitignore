@@ -1,0 +1,24 @@
+# Artefacts de compilation colcon (régénérés par `colcon build`)
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Données volumineuses produites pendant les essais
+# (rosbags, bases RTAB-Map) : à archiver hors Git, à citer dans la doc
+rosbag2_*/
+*.mcap
+*.db3
+*.db
+
+# Éditeurs et système
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
