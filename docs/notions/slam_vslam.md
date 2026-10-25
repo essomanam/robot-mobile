@@ -50,6 +50,37 @@ Moment où le robot **reconnaît un lieu déjà visité**. C'est l'événement q
 dérive. Une fausse fermeture (deux lieux différents qui se ressemblent) est dangereuse : elle
 déforme la carte. Les SLAM vérifient donc géométriquement chaque candidat avant de l'accepter.
 
+### 4.1 Estimation en ligne et graphe optimisé
+
+Un SLAM fournit deux trajectoires différentes, à ne pas confondre :
+
+- **l'estimation en ligne** : la position que le robot connaît **à l'instant t**, avec les
+  seules informations reçues jusque-là. C'est celle qu'utilise la navigation. Elle avance
+  avec l'odométrie et fait des **sauts** à chaque correction (fermeture de boucle).
+- **le graphe optimisé final** : toutes les poses recalculées **après coup**, en tenant compte
+  de toutes les fermetures de boucle, y compris celles qui sont arrivées plus tard. C'est la
+  meilleure reconstruction possible, mais le robot ne la connaissait pas pendant son trajet.
+
+Une fermeture de boucle tardive corrige parfaitement le graphe final mais n'aide pas le robot
+pendant le trajet : les deux doivent donc être évaluées séparément.
+
+### 4.2 La confiance accordée à chaque mesure
+
+L'optimisation du graphe pondère chaque contrainte par sa **covariance** (son incertitude
+annoncée) : une contrainte très sûre est respectée presque exactement, une contrainte incertaine
+peut être « tordue » pour satisfaire les autres. Si une mesure annonce une incertitude nulle
+alors qu'elle se trompe (cas de l'odométrie simulée, voir E2), l'optimiseur lui fait trop
+confiance et corrige mal les autres poses. Régler les incertitudes est donc aussi important
+que les mesures elles-mêmes.
+
+### 4.3 Aliasing perceptif
+
+Deux endroits différents qui se ressemblent (couloirs identiques, motifs répétés) peuvent être
+confondus : c'est l'**aliasing perceptif**. La détection par apparence propose alors une fausse
+fermeture de boucle ; la **vérification géométrique** (les points appariés doivent correspondre
+à un même déplacement 3D cohérent) sert à la rejeter. Concevoir un environnement de test sans
+motifs répétés, ou des descripteurs plus discriminants, réduit ces fausses alertes.
+
 ## 5. Spécificités du SLAM visuel
 
 - On extrait de chaque image des **points d'intérêt** (coins, détails texturés) décrits par une

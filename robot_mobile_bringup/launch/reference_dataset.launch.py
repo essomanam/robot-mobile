@@ -53,8 +53,8 @@ def generate_launch_description():
         output='screen')
 
     trajectory = Node(
-        package='robot_mobile_bringup',
-        executable='reference_trajectory.py',
+        package='robot_mobile_evaluation',
+        executable='reference_trajectory',
         parameters=[os.path.join(bringup, 'config', 'reference_trajectory.yaml')],
         output='screen')
 

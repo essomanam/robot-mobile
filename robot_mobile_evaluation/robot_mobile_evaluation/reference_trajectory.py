@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Fait parcourir au robot une trajectoire de référence définie par paramètres.
 
 La trajectoire est une suite de segments (vitesse linéaire, vitesse angulaire, durée)
@@ -7,7 +6,7 @@ la vraie trajectoire est enregistrée grâce à la vérité terrain du simulateu
 est d'être **identique d'un essai à l'autre**, ce qu'une téléopération à la main ne
 permet pas.
 
-    ros2 run robot_mobile_bringup reference_trajectory.py --ros-args \
+    ros2 run robot_mobile_evaluation reference_trajectory --ros-args \
         --params-file <bringup>/config/reference_trajectory.yaml
 """
 

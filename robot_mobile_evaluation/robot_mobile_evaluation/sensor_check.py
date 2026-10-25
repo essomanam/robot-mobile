@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Vérifie que les capteurs simulés mesurent ce que la géométrie de la salle prévoit.
 
 Principe : la salle est un rectangle connu et le simulateur donne la position exacte
@@ -10,7 +9,7 @@ lues dans TF : un biais révèle donc aussi une erreur de description (URDF / SD
 
 À lancer pendant la simulation, robot immobile, avec les rayons testés dégagés
 (c'est le cas à la position de départ par défaut) :
-    ros2 run robot_mobile_bringup sensor_check.py
+    ros2 run robot_mobile_evaluation sensor_check --ros-args -p use_sim_time:=true
 """
 
 import math
@@ -22,12 +21,14 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from rclpy.time import Time
+from robot_mobile_evaluation.room import ray_to_wall
+from robot_mobile_evaluation.trajectory import yaw_from_quaternion
 from sensor_msgs.msg import CameraInfo, Image, LaserScan
 from tf2_ros import Buffer, TransformListener
 
 
-def yaw_from_quaternion(q):
-    return math.atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z))
+def yaw_of(q):
+    return yaw_from_quaternion(q.x, q.y, q.z, q.w)
 
 
 def apply_yaw(x, y, yaw):
@@ -38,11 +39,6 @@ class SensorCheck(Node):
 
     def __init__(self):
         super().__init__('sensor_check')
-        # Faces intérieures des murs (m)
-        self.x_min = self.declare_parameter('room_x_min', -3.5).value
-        self.x_max = self.declare_parameter('room_x_max', 3.5).value
-        self.y_min = self.declare_parameter('room_y_min', -2.5).value
-        self.y_max = self.declare_parameter('room_y_max', 2.5).value
         # Champ horizontal déclaré dans le modèle SDF (rad), pour vérifier la calibration
         self.hfov = self.declare_parameter('camera_hfov', 1.2112).value
         # Nombre d'acquisitions moyennées pour chaque capteur
@@ -75,21 +71,11 @@ class SensorCheck(Node):
     def on_pose(self, msg):
         self.pose = msg
 
-    def ray_to_wall(self, px, py, angle):
-        """Distance du point (px, py) au mur, dans la direction angle (repère monde)."""
-        dx, dy = math.cos(angle), math.sin(angle)
-        candidates = []
-        if abs(dx) > 1e-9:
-            candidates.append(((self.x_max if dx > 0 else self.x_min) - px) / dx)
-        if abs(dy) > 1e-9:
-            candidates.append(((self.y_max if dy > 0 else self.y_min) - py) / dy)
-        return min(t for t in candidates if t > 0)
-
     def sensor_pose(self, frame):
         """Position (x, y) et cap du capteur dans le monde, via TF + vérité terrain."""
         tf = self.tf_buffer.lookup_transform('base_footprint', frame, Time())
         p = self.pose.pose.pose
-        yaw = yaw_from_quaternion(p.orientation)
+        yaw = yaw_of(p.orientation)
         ox, oy = apply_yaw(tf.transform.translation.x, tf.transform.translation.y, yaw)
         return p.position.x + ox, p.position.y + oy, yaw, tf
 
@@ -105,7 +91,7 @@ class SensorCheck(Node):
         log = self.get_logger().info
         p = self.pose.pose.pose
         log(f'Pose vérité terrain : x={p.position.x:.3f} m  y={p.position.y:.3f} m  '
-            f'cap={math.degrees(yaw_from_quaternion(p.orientation)):.1f}°')
+            f'cap={math.degrees(yaw_of(p.orientation)):.1f}°')
         log(f'Repères : scan={scan.header.frame_id}  profondeur={depth_msg.header.frame_id}  '
             f'camera_info={self.info.header.frame_id}')
         log(f'Moyennes sur {self.samples} acquisitions par capteur')
@@ -117,7 +103,7 @@ class SensorCheck(Node):
                            ('arrière', math.pi), ('droite', 3 * math.pi / 2)):
             i = round((beam - scan.angle_min) / scan.angle_increment)
             angle = scan.angle_min + i * scan.angle_increment
-            expected = self.ray_to_wall(lx, ly, yaw + angle)
+            expected = ray_to_wall(lx, ly, yaw + angle)
             values = np.array([s.ranges[i] for s in self.scans])
             if expected > scan.range_max:
                 log(f'  {name:8s}: > {scan.range_max:.2f} m (hors portée) / '
@@ -140,7 +126,7 @@ class SensorCheck(Node):
         zx = 2.0 * (q.x * q.z + q.w * q.y)
         zy = 2.0 * (q.y * q.z - q.w * q.x)
         axis_yaw = yaw + math.atan2(zy, zx)
-        expected = self.ray_to_wall(cx, cy, axis_yaw)
+        expected = ray_to_wall(cx, cy, axis_yaw)
         log(f'Profondeur au centre ({depth_msg.encoding}) : attendu {expected:.3f} / '
             f'moyenne {values.mean():.3f} / biais {values.mean() - expected:+.4f} / '
             f'bruit {values.std():.4f} m')

@@ -1,0 +1,18 @@
+# RTAB-Map — variante C : SLAM visuel « pur », sans les roues.
+# L'odométrie est calculée à partir des images (rgbd_odometry) au lieu des roues :
+# c'est la caméra seule qui estime le mouvement du robot.
+
+/**/rtabmap:
+  ros__parameters:
+    # odométrie lue sur le topic de rgbd_odometry, qui fournit sa propre covariance
+    odom_frame_id: ""
+
+/**/rgbd_odometry:
+  ros__parameters:
+    frame_id: base_footprint
+    odom_frame_id: odom
+    publish_tf: true                 # publie odom -> base_footprint (remplace les roues)
+    approx_sync: false               # couleur et profondeur ont exactement le même instant
+    wait_for_transform: 0.2
+    "Reg/Force3DoF": "true"
+    "Odom/Strategy": "0"             # 0 = image courante comparée à une carte locale (F2M)

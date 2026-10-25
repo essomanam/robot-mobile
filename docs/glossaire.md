@@ -5,6 +5,13 @@
 
 ---
 
+**Aliasing perceptif** — Confusion entre deux endroits différents qui se ressemblent ; source
+de fausses *fermetures de boucle*.
+
+**Alignement (de trajectoires)** — Transformation rigide (rotation + translation) qui
+superpose au mieux une trajectoire estimée sur la vérité terrain avant de mesurer l'écart
+(méthode de Umeyama / Horn). Évite de pénaliser un simple choix de repère différent.
+
 **ament / ament_cmake / ament_python** — Système de construction des paquets ROS 2.
 `ament_cmake` sert aux paquets C++ ou de configuration, `ament_python` aux paquets Python.
 
@@ -46,6 +53,10 @@ de coût minimal.
 **Contour (OpenCV)** — Courbe qui suit le bord d'une zone d'un *masque* binaire. Permet de mesurer
 l'aire et la position d'une zone détectée.
 
+**Covariance** — Mesure de l'incertitude d'une estimation (variance = écart-type au carré).
+Un SLAM s'en sert pour pondérer chaque mesure : plus la covariance est petite, plus la mesure
+est jugée fiable.
+
 **cv_bridge** — Bibliothèque qui convertit une image ROS (`sensor_msgs/Image`) en tableau
 *OpenCV* et inversement.
 
@@ -69,6 +80,9 @@ adaptée que RGB pour détecter une couleur, car la teinte varie peu avec l'écl
 
 **Hystérésis** — Utilisation de deux seuils différents pour entrer dans un état et pour en sortir,
 afin d'éviter de basculer sans cesse quand la mesure est proche du seuil.
+
+**ICP (Iterative Closest Point)** — Algorithme qui recale deux nuages de points (ou deux scans
+LiDAR) en cherchant le déplacement qui superpose au mieux leurs points les plus proches.
 
 **IMU (centrale inertielle)** — Capteur qui mesure les accélérations et les vitesses de rotation
 du robot.
@@ -101,8 +115,14 @@ c'est l'implémentation *DDS* (Fast DDS par défaut).
 **Nuage de points (point cloud)** — Ensemble de points 3D, obtenu par exemple en projetant chaque
 pixel d'une image de profondeur dans l'espace.
 
+**Nœud (d'un graphe de SLAM)** — Pose du robot mémorisée par le SLAM avec les données des
+capteurs à cet instant (on parle aussi d'image clé, *keyframe*).
+
 **Nœud (node)** — Programme ROS 2 qui remplit une fonction (lire un capteur, détecter une cible,
 commander les moteurs…) et communique avec les autres par *topics*.
+
+**Odométrie visuelle** — Estimation du déplacement du robot à partir des images successives
+de la caméra, sans les roues.
 
 **Odométrie** — Estimation du déplacement du robot à partir de la rotation de ses roues (odométrie
 des roues) ou des images (odométrie visuelle). Précise à court terme, mais elle *dérive*.

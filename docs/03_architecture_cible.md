@@ -121,15 +121,17 @@ flowchart TD
 
 ## 5. Organisation proposée du dépôt
 
-Décision [D-006](decisions.md#d-006--dépôt-organisé-en-plusieurs-paquets) (acceptée), à appliquer au
-début de l'étape E1. Aujourd'hui le dépôt contient un seul paquet, `robot_mobile`, à la racine.
+Décision [D-006](decisions.md#d-006--dépôt-organisé-en-plusieurs-paquets), appliquée à l'étape E1, complétée en E2 par
+[D-012](decisions.md#d-012--paquet-robot_mobile_evaluation-pour-les-outils-dexpérience) (paquet d'évaluation). Les paquets
+`perception` et `control` seront créés à l'étape E3.
 
 ```
 robot-mobile/                    dépôt Git
 ├── README.md                    manuel d'exécution
 ├── docs/                        documentation scientifique (ce dossier)
 ├── robot_mobile_description/    modèle du robot simulé (TurtleBot3 + caméra RGB-D)
-├── robot_mobile_bringup/        lancement : launch, mondes, paramètres YAML, configurations RViz
+├── robot_mobile_bringup/        lancement : launch, mondes, paramètres YAML (dont SLAM), RViz
+├── robot_mobile_evaluation/     outils d'expérience : trajectoire de référence, mesures, métriques
 ├── robot_mobile_perception/     nœuds Python de traitement d'image (cible, marqueurs)
 └── robot_mobile_control/        nœuds Python de comportement et de commande
 ```
@@ -138,6 +140,7 @@ robot-mobile/                    dépôt Git
 |---|---|---|---|
 | `robot_mobile_description` | `ament_cmake` | URDF/SDF, maillages | Partagé par la simulation et le robot réel |
 | `robot_mobile_bringup` | `ament_cmake` | `launch/`, `worlds/`, `config/`, `rviz/` | Aucune logique : seulement de la configuration |
+| `robot_mobile_evaluation` | `ament_python` | contrôle des capteurs, trajectoire scriptée, enregistrement et métriques (ATE, RPE) | Code d'expérience partagé et testé, séparé du code du robot |
 | `robot_mobile_perception` | `ament_python` | détecteurs, utilitaires de vision | Testable seul, sans faire bouger le robot |
 | `robot_mobile_control` | `ament_python` | machine à états, asservissement visuel, sécurité | Indépendant de la façon dont la cible est détectée |
 

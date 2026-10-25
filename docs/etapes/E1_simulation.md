@@ -162,9 +162,9 @@ terrain, commandes) au format MCAP compressé, horodaté en temps simulé.
 | [`robot_mobile_bringup/config/gz_bridge.yaml`](../../robot_mobile_bringup/config/gz_bridge.yaml) | correspondance topics Gazebo ↔ ROS 2 |
 | [`robot_mobile_bringup/launch/simulation.launch.py`](../../robot_mobile_bringup/launch/simulation.launch.py) | lancement de la simulation |
 | [`robot_mobile_bringup/launch/reference_dataset.launch.py`](../../robot_mobile_bringup/launch/reference_dataset.launch.py) | simulation + trajectoire + enregistrement |
-| [`robot_mobile_bringup/scripts/sensor_check.py`](../../robot_mobile_bringup/scripts/sensor_check.py) | vérification des capteurs (§ 5.4) |
-| [`robot_mobile_bringup/scripts/reference_trajectory.py`](../../robot_mobile_bringup/scripts/reference_trajectory.py) | trajectoire scriptée |
-| [`robot_mobile_bringup/scripts/analyze_dataset.py`](../../robot_mobile_bringup/scripts/analyze_dataset.py) | fréquences, dérive de l'odométrie, figure |
+| [`robot_mobile_evaluation/.../sensor_check.py`](../../robot_mobile_evaluation/robot_mobile_evaluation/sensor_check.py) | vérification des capteurs (§ 5.4) |
+| [`robot_mobile_evaluation/.../reference_trajectory.py`](../../robot_mobile_evaluation/robot_mobile_evaluation/reference_trajectory.py) | trajectoire scriptée |
+| [`robot_mobile_evaluation/.../analyze_dataset.py`](../../robot_mobile_evaluation/robot_mobile_evaluation/analyze_dataset.py) | fréquences, dérive de l'odométrie, figure |
 | [`robot_mobile_bringup/scripts/generate_textures.py`](../../robot_mobile_bringup/scripts/generate_textures.py) | génération des textures (outil, non installé) |
 
 **Topics produits**
@@ -320,14 +320,14 @@ colcon build --symlink-install && source install/setup.bash
 ros2 launch robot_mobile_bringup simulation.launch.py
 
 # Vérification des capteurs (autre terminal, robot immobile au départ)
-ros2 run robot_mobile_bringup sensor_check.py --ros-args -p use_sim_time:=true
+ros2 run robot_mobile_evaluation sensor_check --ros-args -p use_sim_time:=true
 
 # Arbre TF
 ros2 run tf2_tools view_frames --ros-args -p use_sim_time:=true
 
 # Jeu de données de référence (s'arrête seul), puis analyse
 ros2 launch robot_mobile_bringup reference_dataset.launch.py output:=$HOME/as52_data/rosbags/E1_reference
-ros2 run robot_mobile_bringup analyze_dataset.py ~/as52_data/rosbags/E1_reference docs/figures
+ros2 run robot_mobile_evaluation analyze_dataset ~/as52_data/rosbags/E1_reference docs/figures
 pkill -x gz-sim-main   # si un serveur Gazebo est resté actif
 
 # Régénérer les textures (uniquement si le décor change)

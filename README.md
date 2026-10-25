@@ -17,7 +17,7 @@ grâce à la profondeur. Le travail est développé en simulation (Gazebo) puis 
 |---|---|---|
 | E0 | Fondations : dépôt, documentation, analyse, feuille de route | 🟢 terminée |
 | E1 | Simulation Gazebo et acquisition des données capteurs | 🟡 en cours |
-| E2 | Cartographie et localisation visuelle (V-SLAM, RTAB-Map) | ⚪ à faire |
+| E2 | Cartographie et localisation visuelle (V-SLAM, RTAB-Map) | 🟡 en cours |
 | E3 | Navigation guidée par la vision | ⚪ à faire |
 | E4 | Perception de la profondeur et évitement d'obstacles | ⚪ à faire |
 | E5 | Validation sur le robot réel | ⚪ à faire |
@@ -35,12 +35,15 @@ robot-mobile/
 ├── robot_mobile_description/     le robot : TurtleBot3 Waffle + caméra RGB-D
 │   ├── urdf/                     description pour ROS (TF, RViz)
 │   └── models/robot_mobile/      modèle pour Gazebo (physique, capteurs)
-└── robot_mobile_bringup/         lancement et outils d'expérience
-    ├── launch/                   simulation, enregistrement du jeu de données
-    ├── config/                   pont Gazebo ↔ ROS 2, trajectoire de référence
-    ├── worlds/, models/          salle as52_room, cible rouge
-    ├── rviz/                     configuration d'affichage
-    └── scripts/                  contrôle des capteurs, trajectoire, analyse, textures
+├── robot_mobile_bringup/         lancement et configuration
+│   ├── launch/                   simulation, jeu de données, SLAM, évaluation des SLAM
+│   ├── config/                   pont Gazebo ↔ ROS 2, trajectoire de référence, slam/
+│   ├── worlds/, models/          salle as52_room, cible rouge
+│   ├── rviz/                     configuration d'affichage
+│   └── scripts/                  génération des textures, comparaison des SLAM
+└── robot_mobile_evaluation/      outils d'expérience (Python) et tests
+    ├── robot_mobile_evaluation/  contrôle des capteurs, trajectoire, enregistrement, métriques
+    └── test/                     tests des métriques (ATE, RPE) et du style
 ```
 
 Les paquets `robot_mobile_perception` et `robot_mobile_control` seront créés à l'étape E3
@@ -108,7 +111,7 @@ Les touches (`i` avancer, `,` reculer, `j` / `l` tourner, `k` arrêter) doivent 
 Simulation lancée, robot immobile à sa position de départ :
 
 ```bash
-ros2 run robot_mobile_bringup sensor_check.py --ros-args -p use_sim_time:=true
+ros2 run robot_mobile_evaluation sensor_check --ros-args -p use_sim_time:=true
 ```
 
 Compare les distances mesurées par le LiDAR et la caméra de profondeur aux distances calculées
@@ -118,14 +121,36 @@ Compare les distances mesurées par le LiDAR et la caméra de profondeur aux dis
 
 ```bash
 ros2 launch robot_mobile_bringup reference_dataset.launch.py
-ros2 run robot_mobile_bringup analyze_dataset.py ~/as52_data/rosbags/<enregistrement> docs/figures
+ros2 run robot_mobile_evaluation analyze_dataset ~/as52_data/rosbags/<enregistrement> docs/figures
 ```
 
 La première commande lance la simulation sans fenêtre, fait faire au robot un tour de salle
 scripté et l'enregistre (rosbag MCAP dans `~/as52_data/rosbags/`) ; elle s'arrête seule.
 La seconde calcule les fréquences des capteurs et compare l'odométrie à la vérité terrain.
 
-*Les scénarios des étapes suivantes (cartographie, navigation visuelle, évitement) seront ajoutés ici.*
+### Cartographie et localisation (SLAM, étape E2)
+
+Pendant la simulation (autre terminal), construire une carte avec RTAB-Map :
+
+```bash
+ros2 launch robot_mobile_bringup slam.launch.py                       # RTAB-Map RGB-D + roues
+ros2 launch robot_mobile_bringup slam.launch.py method:=slam_toolbox  # autre méthode
+```
+
+Méthodes : `rtabmap_rgbd` (caméra RGB-D + roues), `rtabmap_rgbd_vo` (caméra seule),
+`rtabmap_rgbd_scan` (caméra + LiDAR + roues), `slam_toolbox` (LiDAR + roues). La carte
+RTAB-Map est enregistrée dans `~/.ros/rtabmap.db` (`database_path:=` pour la changer).
+
+Comparer les méthodes sur le jeu de données de référence (≈ 15 min, sans simulation) :
+
+```bash
+robot_mobile_bringup/scripts/run_slam_comparison.sh ~/as52_data/slam_runs/<essai>
+```
+
+Chaque méthode rejoue le même rosbag ; le script produit un tableau d'erreurs (ATE, RPE) et des
+figures (trajectoires, erreurs, cartes) dans `~/as52_data/slam_runs/<essai>/`.
+
+*Les scénarios des étapes suivantes (navigation visuelle, évitement) seront ajoutés ici.*
 
 ## Auteur
 

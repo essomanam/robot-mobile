@@ -1,0 +1,15 @@
+# Essai de réglage E2 (T1) : limiter le recalage visuel aux points à moins de 4 m.
+# RÉSULTAT : réglage adopté, intégré à rtabmap.yaml (fichier conservé comme trace de l'essai).
+#
+# Constat : les seules contraintes de fermeture de boucle fausses (20 à 32 cm) relient des vues
+# qui regardent toutes les deux à travers la salle (points à 5-6 m), alors qu'elles comptaient
+# beaucoup de points cohérents (97/113). Hypothèse : les points lointains, à incidence rasante,
+# dégradent ces recalages. Sur une vraie caméra RGB-D, la profondeur au-delà de 4 m est de toute
+# façon peu fiable : ce réglage serait nécessaire sur le robot réel (E5).
+#
+#   ros2 launch robot_mobile_bringup slam_evaluation.launch.py method:=rtabmap_rgbd \
+#       extra_params:=<bringup>/config/slam/tuning/vis_max_depth_4m.yaml output:=...
+
+/**/rtabmap:
+  ros__parameters:
+    "Vis/MaxDepth": "4.0"            # m : points plus lointains ignorés pour le recalage

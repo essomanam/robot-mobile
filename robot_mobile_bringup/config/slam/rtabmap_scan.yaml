@@ -1,0 +1,11 @@
+# RTAB-Map — variante D : caméra RGB-D + LiDAR + odométrie des roues.
+# Chargé APRÈS rtabmap.yaml (ces valeurs remplacent les communes).
+# Réglages repris de rtabmap_demos/launch/turtlebot3/turtlebot3_rgbd_scan.launch.py.
+
+/**/rtabmap:
+  ros__parameters:
+    subscribe_scan: true
+    "Reg/Strategy": "1"                    # recalage par ICP sur les scans LiDAR
+    "RGBD/NeighborLinkRefining": "true"    # corrige l'odométrie entre deux nœuds par ICP
+    "Grid/Sensor": "2"                     # carte d'occupation : LiDAR + profondeur
+    "Grid/RangeMin": "0.2"                 # m : ignore les points sur le robot lui-même

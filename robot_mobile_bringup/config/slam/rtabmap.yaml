@@ -1,0 +1,46 @@
+# RTAB-Map — configuration commune à toutes les variantes (étape E2).
+#
+# Point de départ : rtabmap_demos/launch/turtlebot3/turtlebot3_rgbd.launch.py (RTAB-Map 0.23),
+# réglages éprouvés pour un TurtleBot3 équipé d'une caméra RGB-D, adaptés à notre robot.
+# Les paramètres internes de RTAB-Map (« Groupe/Nom ») s'écrivent entre guillemets.
+# Variantes : rtabmap_scan.yaml (ajout du LiDAR), rtabmap_vo.yaml (odométrie visuelle).
+
+/**/rtabmap:
+  ros__parameters:
+    frame_id: base_footprint         # repère du robot
+    map_frame_id: map
+    subscribe_rgb: true
+    subscribe_depth: true
+    subscribe_scan: false
+    approx_sync: true                # images (15 Hz) et LiDAR (10 Hz) n'ont pas les mêmes instants
+    sync_queue_size: 30
+    topic_queue_size: 10
+    wait_for_transform: 0.2          # s
+    publish_tf: true                 # publie map -> odom
+
+    # Odométrie des roues lue dans TF (odom -> base_footprint) avec une incertitude explicite.
+    # Le message /odom de Gazebo annonce une covariance nulle (odométrie « parfaite ») ;
+    # RTAB-Map lui faisait alors trop confiance et corrigeait mal le cap lors des fermetures
+    # de boucle (essai de réglage E2, § 8.1). Valeurs par défaut de RTAB-Map.
+    odom_frame_id: odom
+    odom_tf_linear_variance: 0.001   # m²
+    odom_tf_angular_variance: 0.001  # rad²
+
+    # --- Graphe et détection ---
+    "Rtabmap/DetectionRate": "2"     # Hz : un nœud du graphe toutes les 0,5 s au plus (≈ 10 cm à 0,2 m/s)
+    "Reg/Force3DoF": "true"          # robot plan : on n'estime que x, y et le cap
+    "Reg/Strategy": "0"              # recalage entre images : visuel (points d'intérêt)
+    "Vis/MaxDepth": "4.0"            # m : points plus lointains ignorés pour le recalage visuel
+                                     # (essai de réglage T1 : 0 contrainte fausse au lieu de 14,
+                                     # et profondeur peu fiable au-delà de 4 m sur une vraie caméra)
+    "Optimizer/GravitySigma": "0"    # pas de contrainte de gravité (inutile en 2D)
+    "Mem/IncrementalMemory": "true"  # cartographie (false = localisation sur carte existante)
+
+    # --- Carte d'occupation 2D construite avec la profondeur ---
+    "Grid/Sensor": "1"               # 0 = LiDAR, 1 = profondeur, 2 = les deux
+    "Grid/3D": "false"
+    "Grid/RayTracing": "true"        # marque comme libre l'espace traversé par les rayons
+    "Grid/RangeMax": "3.0"           # m : au-delà, la profondeur est jugée trop bruitée
+    "Grid/NormalsSegmentation": "false"  # sol / obstacle séparés par la hauteur seulement
+    "Grid/MaxGroundHeight": "0.05"   # m : en dessous, c'est le sol
+    "Grid/MaxObstacleHeight": "0.4"  # m : au-dessus, ignoré (le robot mesure environ 0,2 m)

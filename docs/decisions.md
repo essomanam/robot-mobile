@@ -36,6 +36,9 @@
 | [D-009](#d-009--caméra-rgb-d-simulée-et-noms-des-topics) | Caméra RGB-D simulée et noms des topics | acceptée | 2026-10-24 |
 | [D-010](#d-010--scène-simulée-dédiée-as52_room) | Scène simulée dédiée `as52_room` | acceptée | 2026-10-24 |
 | [D-011](#d-011--jeu-de-données-de-référence-scripté-et-enregistré) | Jeu de données de référence scripté et enregistré | acceptée | 2026-10-24 |
+| [D-012](#d-012--paquet-robot_mobile_evaluation-pour-les-outils-dexpérience) | Paquet `robot_mobile_evaluation` pour les outils d'expérience | acceptée | 2026-10-25 |
+| [D-013](#d-013--protocole-de-comparaison-des-slam) | Protocole de comparaison des SLAM | acceptée | 2026-10-25 |
+| [D-014](#d-014--configuration-slam-retenue-pour-la-suite) | Configuration SLAM retenue pour la suite | proposée | 2026-10-25 |
 
 ---
 
@@ -178,3 +181,38 @@
 - **Décision** : trajectoire scriptée (tour de la salle, retour au départ) définie dans `config/reference_trajectory.yaml`, enregistrée en rosbag MCAP compressé zstd, avec la vérité terrain ; lancement en une commande (`reference_dataset.launch.py`). Données stockées **hors Git** dans `~/as52_data/rosbags/`.
 - **Justification** : une trajectoire scriptée est identique d'un essai à l'autre, contrairement à une téléopération ; l'enregistrement permet de rejouer exactement les mêmes capteurs pour comparer deux algorithmes ; le retour au départ offre une fermeture de boucle au SLAM ; la taille (2,2 Go pour un tour de 103 s) exclut Git.
 - **Conséquences** : la trajectoire est en boucle ouverte, donc pas exactement le rectangle prévu, mais la vérité terrain enregistrée donne la trajectoire exacte.
+
+### D-012 — Paquet `robot_mobile_evaluation` pour les outils d'expérience
+
+| Date | Statut | Étape |
+|---|---|---|
+| 2026-10-25 | acceptée | E2 |
+
+- **Contexte** : en E1, les scripts (contrôle des capteurs, trajectoire de référence, analyse) ont été placés dans `robot_mobile_bringup`, alors que l'[architecture](03_architecture_cible.md#5-organisation-proposée-du-dépôt) réserve ce paquet à la configuration. E2 ajoute de nouveaux outils (enregistrement des trajectoires, métriques) qui partagent du code.
+- **Options** : (a) continuer dans `bringup` ; (b) un paquet Python dédié.
+- **Décision** : (b) paquet `ament_python` **`robot_mobile_evaluation`** : modules partagés (`room.py` : plan de la salle ; `trajectory.py` : format TUM, alignement, ATE, RPE) et exécutables (`sensor_check`, `reference_trajectory`, `analyze_dataset`, `trajectory_logger`, `evaluate_slam`).
+- **Justification** : respect de la règle « un paquet, une responsabilité » ; plan de la salle et calculs d'erreur écrits **une seule fois** ; **tests unitaires** sur les métriques (une métrique fausse fausserait toutes les comparaisons).
+- **Conséquences** : les commandes changent (`ros2 run robot_mobile_evaluation <outil>`, sans `.py`) ; README et fiche E1 mis à jour.
+
+### D-013 — Protocole de comparaison des SLAM
+
+| Date | Statut | Étape |
+|---|---|---|
+| 2026-10-25 | acceptée | E2 |
+
+- **Contexte** : il faut montrer, chiffres à l'appui, ce qu'apporte le SLAM visuel, et justifier le choix de configuration ([D-005](#d-005--rtab-map-comme-outil-de-v-slam-principal)).
+- **Décision** : rejouer **le même rosbag de référence** (E1) avec chaque méthode : A odométrie des roues seule, B RTAB-Map RGB-D + roues, C RTAB-Map RGB-D seule (odométrie visuelle), D RTAB-Map RGB-D + LiDAR + roues, E slam_toolbox (LiDAR + roues). Mesures : ATE (RMSE après alignement rigide), RPE sur 1 m, erreur finale (dérive accumulée), ATE du graphe optimisé, fermetures de boucle, temps de calcul, carte superposée au plan réel. La configuration principale est répétée pour mesurer la variabilité d'un essai à l'autre.
+- **Justification** : mêmes données pour tous = comparaison loyale ; ATE / RPE sont les métriques de référence de la littérature (Sturm et al., 2012) ; métriques implémentées dans le projet (transparentes, testées) et trajectoires exportées au format TUM pour un contrôle croisé possible avec `evo`.
+- **Conséquences** : chaque essai s'isole d'une éventuelle simulation en cours par un `ROS_DOMAIN_ID` dédié ; résultats bruts stockés hors Git dans `~/as52_data/slam_runs/`.
+
+### D-014 — Configuration SLAM retenue pour la suite
+
+| Date | Statut | Étape |
+|---|---|---|
+| 2026-10-25 | proposée — à valider par l'étudiant | E2 → E3, E4 |
+
+- **Contexte** : comparaison E2 de cinq méthodes sur le même jeu de données ([fiche E2](etapes/E2_vslam.md#81-comparaison-des-méthodes-configuration-finale)).
+- **Options** : B RTAB-Map RGB-D + roues (ATE 3,2 cm) ; C caméra seule (fragile, perte de suivi) ; D RTAB-Map RGB-D + LiDAR + roues (ATE 1,0 cm, erreur finale 0,4 cm) ; E slam_toolbox (ATE 1,3 cm, erreur finale 3 cm).
+- **Décision proposée** : **D** (`method:=rtabmap_rgbd_scan`) pour la navigation des étapes E3 et E4, avec les réglages finaux (incertitude d'odométrie explicite, `Vis/MaxDepth` = 4 m) ; E (slam_toolbox) comme solution de repli si le calcul de RTAB-Map posait problème sur le matériel réel.
+- **Justification** : meilleure précision et meilleure carte, faible variabilité (3 essais) ; utilise la caméra RGB-D **et** le LiDAR comme le demande le sujet ; la vision apporte la reconnaissance de lieux, le LiDAR la précision locale.
+- **Conséquences** : à confirmer en mode localisation (E2, partie 2) ; `slam.launch.py` garde `rtabmap_rgbd` par défaut tant que cette décision n'est pas validée.
