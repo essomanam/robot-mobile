@@ -72,16 +72,18 @@ obstacle est trop proche, quoi que demandent les nœuds en amont.
 
 ## 3. Topics principaux
 
-Les noms des topics caméra seront fixés à l'étape E1, quand le modèle RGB-D sera créé.
+Noms des topics caméra fixés à l'étape E1 ([D-009](decisions.md#d-009--caméra-rgb-d-simulée-et-noms-des-topics)) sur la
+convention des pilotes de caméras réelles.
 
 | Topic | Type de message | Produit par | Utilisé par |
 |---|---|---|---|
 | `/scan` | `sensor_msgs/LaserScan` | LiDAR | RTAB-Map, Nav2, sécurité |
 | `/odom` | `nav_msgs/Odometry` | odométrie des roues | RTAB-Map, Nav2 |
 | `/imu` | `sensor_msgs/Imu` | centrale inertielle | (option) fusion d'odométrie |
-| `/camera/…/image_raw` (couleur) | `sensor_msgs/Image` | caméra | RTAB-Map, détecteur |
-| `/camera/…/image_raw` (profondeur) | `sensor_msgs/Image` | caméra | RTAB-Map, Nav2, détecteur |
-| `/camera/…/camera_info` | `sensor_msgs/CameraInfo` | caméra | tous les traitements d'image |
+| `/camera/color/image_raw` | `sensor_msgs/Image` (rgb8) | caméra | RTAB-Map, détecteur |
+| `/camera/depth/image_raw` | `sensor_msgs/Image` (32FC1, mètres) | caméra | RTAB-Map, Nav2, détecteur |
+| `/camera/color/camera_info`, `/camera/depth/camera_info` | `sensor_msgs/CameraInfo` | caméra | tous les traitements d'image |
+| `/ground_truth/odom` | `nav_msgs/Odometry` | simulateur (vérité terrain) | évaluation uniquement |
 | `/map` | `nav_msgs/OccupancyGrid` | RTAB-Map | Nav2 |
 | `/tf`, `/tf_static` | `tf2_msgs/TFMessage` | plusieurs | tous |
 | détections (nom à fixer) | `vision_msgs/Detection2DArray` (proposé) | détecteur | comportement |
@@ -90,7 +92,9 @@ Les noms des topics caméra seront fixés à l'étape E1, quand le modèle RGB-D
 ## 4. Arbre des repères (TF)
 
 Chaque capteur mesure dans son propre repère. L'arbre TF décrit comment passer de l'un à
-l'autre ; noms tirés de l'URDF `turtlebot3_waffle` de Lyrical.
+l'autre ; noms repris de l'URDF `turtlebot3_waffle`, adaptés à l'étape E1 : la profondeur
+simulée sort du même capteur que la couleur, elle est donc exprimée dans le **même repère
+optique** (`camera_rgb_optical_frame`), et les repères `camera_depth_*` ont été retirés.
 
 ```mermaid
 flowchart TD
@@ -101,9 +105,7 @@ flowchart TD
     BL -->|fixe| IMU["imu_link"]
     BL -->|fixe| CL["camera_link"]
     CL -->|fixe| RGB["camera_rgb_frame"]
-    RGB -->|fixe| RGBO["camera_rgb_optical_frame"]
-    CL -->|fixe| DEP["camera_depth_frame"]
-    DEP -->|fixe| DEPO["camera_depth_optical_frame"]
+    RGB -->|fixe| RGBO["camera_rgb_optical_frame<br/>(couleur + profondeur)"]
 ```
 
 - `map → odom` : publié par le SLAM. La position dans `odom` est continue mais dérive ; le SLAM
@@ -112,10 +114,10 @@ flowchart TD
 - Les repères **optiques** suivent la convention des caméras (z vers l'avant, x vers la droite,
   y vers le bas), différente de celle du robot (x vers l'avant, y à gauche, z en haut).
 
-> **Point à corriger à l'étape E1 :** dans le modèle Gazebo fourni, les images sont horodatées
-> dans `camera_rgb_frame` au lieu de `camera_rgb_optical_frame`. Les axes seraient alors mal
-> interprétés et toute reconstruction 3D (nuage de points, SLAM) serait mal orientée. Le modèle
-> RGB-D du projet devra utiliser le repère optique (à vérifier visuellement dans RViz).
+> **Corrigé à l'étape E1 :** dans le modèle Gazebo fourni, les images sont horodatées dans
+> `camera_rgb_frame` au lieu de `camera_rgb_optical_frame` ; les axes seraient alors mal
+> interprétés et toute reconstruction 3D mal orientée. Le modèle du projet publie ses images
+> dans le repère optique (voir [E1](etapes/E1_simulation.md)).
 
 ## 5. Organisation proposée du dépôt
 

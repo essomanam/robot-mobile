@@ -32,6 +32,10 @@
 | [D-005](#d-005--rtab-map-comme-outil-de-v-slam-principal) | RTAB-Map comme outil de V-SLAM principal | acceptée | 2026-10-24 |
 | [D-006](#d-006--dépôt-organisé-en-plusieurs-paquets) | Dépôt organisé en plusieurs paquets | acceptée | 2026-10-24 |
 | [D-007](#d-007--nommage-robot-mobile--robot_mobile) | Nommage `robot-mobile` / `robot_mobile` | acceptée | 2026-10-24 |
+| [D-008](#d-008--description-du-robot--sdf-pour-gazebo-urdf-pour-ros) | Description du robot : SDF pour Gazebo, URDF pour ROS | acceptée | 2026-10-24 |
+| [D-009](#d-009--caméra-rgb-d-simulée-et-noms-des-topics) | Caméra RGB-D simulée et noms des topics | acceptée | 2026-10-24 |
+| [D-010](#d-010--scène-simulée-dédiée-as52_room) | Scène simulée dédiée `as52_room` | acceptée | 2026-10-24 |
+| [D-011](#d-011--jeu-de-données-de-référence-scripté-et-enregistré) | Jeu de données de référence scripté et enregistré | acceptée | 2026-10-24 |
 
 ---
 
@@ -126,3 +130,51 @@
 - **Décision** : renommer en **`robot-mobile`** pour le dépôt et le dossier, **`robot_mobile`** pour le paquet ROS.
 - **Justification** : un nom de paquet ROS n'accepte que des minuscules, des chiffres et le tiret bas `_` (REP 144) ; le tiret `-` est d'usage pour les noms de dépôts.
 - **Conséquences** : dossier local renommé, `package.xml`, `CMakeLists.txt` et `launch/rsp.launch.py` modifiés, adresse du dépôt distant mise à jour vers `github.com/essomanam/robot-mobile`. Le dépôt doit aussi être renommé sur GitHub (Settings → Repository name).
+
+### D-008 — Description du robot : SDF pour Gazebo, URDF pour ROS
+
+| Date | Statut | Étape |
+|---|---|---|
+| 2026-10-24 | acceptée | E1 |
+
+- **Contexte** : il faut un TurtleBot3 Waffle équipé d'une caméra RGB-D, à la fois pour Gazebo (physique, capteurs) et pour ROS (arbre TF, affichage dans RViz).
+- **Options** : (a) un seul fichier URDF/xacro avec des balises `<gazebo>`, converti par Gazebo ; (b) un modèle SDF pour Gazebo et un URDF pour ROS, comme le fait `turtlebot3_gazebo` ; (c) le modèle Waffle d'origine, sans profondeur.
+- **Décision** : (b) `robot_mobile_description/models/robot_mobile/model.sdf` + `robot_mobile_description/urdf/robot_mobile.urdf.xacro`.
+- **Justification** : schéma éprouvé sur cette version de Gazebo ; contrôle direct de la physique (roulettes en liaison rotule, frottements) et des capteurs, sans dépendre de la conversion URDF → SDF (qui fusionne les liaisons fixes et traduit approximativement les frottements). (c) est exclu car il n'a pas de profondeur.
+- **Conséquences** : deux fichiers à garder cohérents (rappel en tête de chacun) ; la cohérence est **vérifiée par mesure** avec `sensor_check.py`, qui compare les distances mesurées aux distances calculées à partir des positions TF. En passant, deux défauts du modèle d'origine ont été corrigés : `base_footprint` placé 1 cm au-dessus du sol, et images horodatées hors du repère optique.
+
+### D-009 — Caméra RGB-D simulée et noms des topics
+
+| Date | Statut | Étape |
+|---|---|---|
+| 2026-10-24 | acceptée | E1 |
+
+- **Contexte** : aucun modèle TurtleBot3 fourni n'a de caméra de profondeur ; le matériel réel n'est pas encore connu ([D-004](#d-004--hypothèse-sur-le-robot-du-laboratoire)).
+- **Options** : résolution 1920 × 1080 (caméra du Waffle d'origine) ou 640 × 480 ; 30 ou 15 images/s ; noms de topics de Gazebo ou des pilotes réels.
+- **Décision** : capteur Gazebo `rgbd_camera`, **640 × 480, champ horizontal 69,4°, 15 images/s**, profondeur 0,2 à 8 m recalée sur la couleur, publiée dans `camera_rgb_optical_frame` ; topics `/camera/color/{image_raw,camera_info}` et `/camera/depth/{image_raw,camera_info}`.
+- **Justification** : 640 × 480 est la résolution de travail usuelle de RTAB-Map et d'une RealSense D435 (dont on reprend le champ de vision couleur) ; 15 images/s suffisent à 0,2 m/s (1,3 cm parcouru entre deux images) et divisent par deux le calcul et le volume de données ; en RGB-D brut, 30 images/s représenteraient 64 Mo/s, impossibles à transmettre en Wi-Fi depuis le robot réel. Les noms de topics des pilotes réels évitent de modifier le code en E5.
+- **Conséquences** : le pilote de la caméra réelle devra être réglé de la même façon. La profondeur simulée a un bruit constant (≈ 6 mm), plus faible et plus régulier qu'une vraie caméra dont l'erreur croît avec la distance : écart sim / réel à analyser en E5.
+
+### D-010 — Scène simulée dédiée `as52_room`
+
+| Date | Statut | Étape |
+|---|---|---|
+| 2026-10-24 | acceptée | E1 |
+
+- **Contexte** : le SLAM visuel a besoin de détails visuels ; les étapes E3 et E4 ont besoin de scénarios maîtrisés.
+- **Options** : (a) monde `turtlebot3_house` fourni (15 × 10,5 m, briques répétitives, dépend de modèles en ligne) ; (b) salle construite pour le projet ; (c) les deux.
+- **Décision** : (b), choisie par l'étudiant : salle de 7 × 5 m, murs de 1,5 m, textures générées par script (`generate_textures.py`, graine fixe), deux piliers, table, poubelle, cible rouge.
+- **Justification** : taille adaptée à la portée du LiDAR (3,5 m) ; textures **toutes différentes** (pas de lieux qui se ressemblent) et **sans rouge saturé** (pas de fausse détection de la cible) ; aucune dépendance Internet ; positions des objets connues exactement, donc distances attendues calculables.
+- **Conséquences** : les noms de modèles et de fichiers suivent la convention anglaise ([D-003](#d-003--documentation-en-français-en-markdown-dans-docs)) : `as52_room`, `red_target`. Deux textures de la table reprise de `turtlebot3_house` sont absentes du paquet TurtleBot3 : la table s'affiche sans texture (aucun effet sur la géométrie).
+
+### D-011 — Jeu de données de référence scripté et enregistré
+
+| Date | Statut | Étape |
+|---|---|---|
+| 2026-10-24 | acceptée | E1 |
+
+- **Contexte** : les étapes E2 (SLAM) et E3 (perception) doivent pouvoir être développées et **comparées sur les mêmes données**.
+- **Options** : téléopération à la main ; trajectoire scriptée ; enregistrement ou non.
+- **Décision** : trajectoire scriptée (tour de la salle, retour au départ) définie dans `config/reference_trajectory.yaml`, enregistrée en rosbag MCAP compressé zstd, avec la vérité terrain ; lancement en une commande (`reference_dataset.launch.py`). Données stockées **hors Git** dans `~/as52_data/rosbags/`.
+- **Justification** : une trajectoire scriptée est identique d'un essai à l'autre, contrairement à une téléopération ; l'enregistrement permet de rejouer exactement les mêmes capteurs pour comparer deux algorithmes ; le retour au départ offre une fermeture de boucle au SLAM ; la taille (2,2 Go pour un tour de 103 s) exclut Git.
+- **Conséquences** : la trajectoire est en boucle ouverte, donc pas exactement le rectangle prévu, mais la vérité terrain enregistrée donne la trajectoire exacte.

@@ -1,16 +1,20 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>robot_mobile</name>
-  <version>0.0.0</version>
-  <description>Projet AS52 (UTBM) : perception visuelle, V-SLAM et navigation autonome sur TurtleBot3.</description>
+  <name>robot_mobile_description</name>
+  <version>0.1.0</version>
+  <description>Description du robot du projet AS52 : TurtleBot3 Waffle équipé d'une caméra RGB-D (URDF pour ROS, SDF pour Gazebo).</description>
   <maintainer email="manganmanasamuel@gmail.com">essomanam</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <!-- Maillages 3D du TurtleBot3 (base, roues, LiDAR, caméra) -->
+  <exec_depend>turtlebot3_gazebo</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
   <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_xmllint</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

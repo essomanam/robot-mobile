@@ -16,7 +16,7 @@ grâce à la profondeur. Le travail est développé en simulation (Gazebo) puis 
 | Étape | Contenu | Statut |
 |---|---|---|
 | E0 | Fondations : dépôt, documentation, analyse, feuille de route | 🟢 terminée |
-| E1 | Simulation Gazebo et acquisition des données capteurs | ⚪ à faire |
+| E1 | Simulation Gazebo et acquisition des données capteurs | 🟡 en cours |
 | E2 | Cartographie et localisation visuelle (V-SLAM, RTAB-Map) | ⚪ à faire |
 | E3 | Navigation guidée par la vision | ⚪ à faire |
 | E4 | Perception de la profondeur et évitement d'obstacles | ⚪ à faire |
@@ -29,19 +29,22 @@ Détail et critères : [feuille de route](docs/04_feuille_de_route.md).
 
 ```
 robot-mobile/
-├── README.md            ce fichier : présentation et manuel d'exécution
-├── LICENSE.md           licence Apache-2.0
-├── docs/                documentation scientifique du projet
-├── package.xml          paquet ROS 2 robot_mobile (ament_cmake)
-├── CMakeLists.txt
-├── config/              fichiers de paramètres
-├── description/         description du robot (URDF / xacro)
-├── launch/              fichiers de lancement
-└── worlds/              mondes Gazebo
+├── README.md                     ce fichier : présentation et manuel d'exécution
+├── LICENSE.md                    licence Apache-2.0
+├── docs/                         documentation scientifique du projet
+├── robot_mobile_description/     le robot : TurtleBot3 Waffle + caméra RGB-D
+│   ├── urdf/                     description pour ROS (TF, RViz)
+│   └── models/robot_mobile/      modèle pour Gazebo (physique, capteurs)
+└── robot_mobile_bringup/         lancement et outils d'expérience
+    ├── launch/                   simulation, enregistrement du jeu de données
+    ├── config/                   pont Gazebo ↔ ROS 2, trajectoire de référence
+    ├── worlds/, models/          salle as52_room, cible rouge
+    ├── rviz/                     configuration d'affichage
+    └── scripts/                  contrôle des capteurs, trajectoire, analyse, textures
 ```
 
-Cette structure évoluera à l'étape E1 vers plusieurs paquets (description, bringup, perception,
-control) : voir l'[architecture cible](docs/03_architecture_cible.md#5-organisation-proposée-du-dépôt).
+Les paquets `robot_mobile_perception` et `robot_mobile_control` seront créés à l'étape E3
+(voir l'[architecture cible](docs/03_architecture_cible.md#5-organisation-proposée-du-dépôt)).
 
 ## Environnement requis
 
@@ -74,12 +77,55 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-Vérification : `ros2 pkg prefix robot_mobile` doit afficher le chemin du paquet installé.
+Vérification : `ros2 pkg prefix robot_mobile_bringup` doit afficher le chemin du paquet installé.
 
 ## Utilisation
 
-*À venir : les scénarios (simulation, cartographie, navigation visuelle, évitement) seront
-ajoutés ici au fil des étapes, chacun avec sa commande de lancement unique et le résultat attendu.*
+Dans chaque terminal : `source /opt/ros/lyrical/setup.bash && source install/setup.bash`.
+
+### Simulation (étape E1)
+
+```bash
+ros2 launch robot_mobile_bringup simulation.launch.py
+```
+
+Ouvre Gazebo (salle `as52_room`, robot au point (-2,5 ; -1,5)) et RViz (robot, scan LiDAR,
+nuage de profondeur, images couleur et profondeur). Sans fenêtre : ajouter `gui:=false rviz:=false`.
+
+Piloter le robot au clavier (autre terminal) :
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args \
+    -p stamped:=true -p frame_id:=base_footprint -p speed:=0.2 -p turn:=0.8
+```
+
+Les touches (`i` avancer, `,` reculer, `j` / `l` tourner, `k` arrêter) doivent être tapées
+**dans ce terminal** : il doit être la fenêtre active, pas Gazebo ni RViz. Les vitesses
+0,2 m/s et 0,8 rad/s restent dans les limites d'un Waffle réel (0,26 m/s, 1,82 rad/s).
+
+### Contrôle des capteurs (E1)
+
+Simulation lancée, robot immobile à sa position de départ :
+
+```bash
+ros2 run robot_mobile_bringup sensor_check.py --ros-args -p use_sim_time:=true
+```
+
+Compare les distances mesurées par le LiDAR et la caméra de profondeur aux distances calculées
+à partir de la géométrie de la salle. Résultat attendu : biais de l'ordre du millimètre.
+
+### Jeu de données de référence (E1)
+
+```bash
+ros2 launch robot_mobile_bringup reference_dataset.launch.py
+ros2 run robot_mobile_bringup analyze_dataset.py ~/as52_data/rosbags/<enregistrement> docs/figures
+```
+
+La première commande lance la simulation sans fenêtre, fait faire au robot un tour de salle
+scripté et l'enregistre (rosbag MCAP dans `~/as52_data/rosbags/`) ; elle s'arrête seule.
+La seconde calcule les fréquences des capteurs et compare l'odométrie à la vérité terrain.
+
+*Les scénarios des étapes suivantes (cartographie, navigation visuelle, évitement) seront ajoutés ici.*
 
 ## Auteur
 

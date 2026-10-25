@@ -50,12 +50,13 @@ les versions exactes permet d'expliquer un écart et de reconstruire l'environne
 | `ros-lyrical-turtlebot3-simulations` (`turtlebot3_gazebo`, `turtlebot3_fake_node`) | ✅ installé | E1 → E4 |
 | `ros-lyrical-depthimage-to-laserscan` | ✅ installé | E4 |
 | `ros-lyrical-teleop-twist-keyboard` | ✅ installé | E1 (pilotage manuel) |
-| `ros-lyrical-rqt-image-view` | à installer | E1, E3 (visualiser les images) |
-| `ros-lyrical-rtabmap-ros` | à installer | E2 (V-SLAM) |
-| `ros-lyrical-slam-toolbox` | à installer | E2 (référence LiDAR pour comparaison) |
+| `rqt_image_view`, `tf2_tools`, `xacro`, `rosbag2_storage_mcap` (inclus dans `desktop`) | ✅ installé | E1 (images, arbre TF, description du robot, enregistrements) |
+| `vision_msgs` | ✅ installé | E3 (messages de détection) |
+| `ros-lyrical-rtabmap-ros` (RTAB-Map 0.23.13) | ✅ installé le 2026-10-25 | E2 (V-SLAM) |
+| `ros-lyrical-slam-toolbox` (2.10.0) | ✅ installé le 2026-10-25 | E2 (référence LiDAR pour comparaison) |
 | `ros-lyrical-navigation2`, `ros-lyrical-nav2-bringup` | à installer | E2 → E4 (navigation) |
-| `ros-lyrical-image-proc`, `ros-lyrical-depth-image-proc` | à installer | E1 → E4 (traitement images / profondeur) |
-| `ros-lyrical-aruco-opencv`, `ros-lyrical-vision-msgs` | à installer | E3 (marqueurs, messages de détection) |
+| `ros-lyrical-image-proc`, `ros-lyrical-depth-image-proc` | à installer | E2 → E4 (traitement images / profondeur) |
+| `ros-lyrical-aruco-opencv` | à installer | E3 (marqueurs) |
 | `evo` (outil Python, via `pip`/`pipx`) | à installer | E2 (calcul des erreurs de trajectoire) |
 
 Notes :

@@ -1,0 +1,18 @@
+# Trajectoire de référence E1 : un tour de la salle dans le sens trigonométrique,
+# à 1 m des murs, en partant de (-2.5, -1.5) face à +x et en revenant au départ
+# (le retour au point de départ permet une fermeture de boucle pour le SLAM, E2).
+#
+#   côté 1 : 5,0 m vers +x   -> 25 s à 0,2 m/s
+#   virage : 90° à gauche    -> pi/2 / 0,4 rad/s = 3,927 s
+#   côté 2 : 3,0 m vers +y   -> 15 s
+#   ... puis côtés 3 et 4 symétriques
+#
+# Durée totale : 95,7 s (+ 5 s d'attente immobile au départ).
+reference_trajectory:
+  ros__parameters:
+    use_sim_time: true
+    start_delay: 5.0                 # s, robot immobile avant de partir
+    rate_hz: 20.0                    # Hz, fréquence d'envoi des commandes
+    linear_speeds:  [0.2, 0.0,   0.2,  0.0,   0.2,  0.0,   0.2,  0.0]     # m/s
+    angular_speeds: [0.0, 0.4,   0.0,  0.4,   0.0,  0.4,   0.0,  0.4]     # rad/s
+    durations:      [25.0, 3.927, 15.0, 3.927, 25.0, 3.927, 15.0, 3.927]  # s

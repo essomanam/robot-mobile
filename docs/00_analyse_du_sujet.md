@@ -51,8 +51,8 @@ le sujet a été traité.
 
 | ID | Exigence (reformulée) | Source | Critère de vérification proposé | Étape | Preuve |
 |---|---|---|---|---|---|
-| EX-SIM-1 | Le TurtleBot3 est simulé dans Gazebo, dans une scène statique | Axe 1 | Une seule commande `ros2 launch` démarre monde + robot ; le robot répond aux commandes de vitesse | E1 | — |
-| EX-SIM-2 | Les données des capteurs (caméra RGB-D, LiDAR, odométrie, IMU) sont acquises dans ROS 2 | Axe 1 | Topics publiés, fréquences et résolutions mesurées, enregistrement rosbag rejouable | E1 | — |
+| EX-SIM-1 | Le TurtleBot3 est simulé dans Gazebo, dans une scène statique | Axe 1 | Une seule commande `ros2 launch` démarre monde + robot ; le robot répond aux commandes de vitesse | E1 | [E1 § 6 et 10](etapes/E1_simulation.md#6-implémentation) (contrôle visuel : § 7) |
+| EX-SIM-2 | Les données des capteurs (caméra RGB-D, LiDAR, odométrie, IMU) sont acquises dans ROS 2 | Axe 1 | Topics publiés, fréquences et résolutions mesurées, enregistrement rosbag rejouable | E1 | [E1 § 8](etapes/E1_simulation.md#8-résultats) |
 | EX-VSLAM-1 | Une carte de l'environnement est construite par SLAM visuel | Axe 2 | Carte sauvegardée et rechargeable, cohérente avec le monde simulé | E2 | — |
 | EX-VSLAM-2 | Le robot est localisé dans cette carte | Axe 2 | Erreur de trajectoire (ATE/RPE) mesurée par rapport à la vérité terrain du simulateur | E2 | — |
 | EX-VIS-1 | Un traitement d'image extrait une information utile à la navigation (cible, ligne ou marqueur) | Axe 3 | Taux de détection et fréquence de traitement mesurés | E3 | — |

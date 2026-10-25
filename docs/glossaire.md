@@ -19,11 +19,17 @@ caméra (ex. : tourner tant que la cible n'est pas au centre de l'image).
 trajectoire estimée par le *SLAM* et la vraie trajectoire, après les avoir superposées au mieux.
 Mesure la cohérence globale.
 
+**Biais (d'un capteur)** — Erreur systématique : écart moyen entre la mesure et la vraie
+valeur, qui ne disparaît pas en moyennant. À distinguer du *bruit*.
+
 **Boucle fermée / boucle ouverte** — En boucle ouverte, on envoie une commande sans vérifier son
 effet. En boucle fermée, on mesure le résultat, on le compare à l'objectif et on corrige.
 
 **Bridge (pont) ros_gz** — Programme qui traduit les messages de *Gazebo* en messages *ROS 2*
 et inversement.
+
+**Bruit (d'un capteur)** — Erreur aléatoire qui change à chaque mesure ; on la caractérise par
+son écart-type. Elle diminue quand on moyenne plusieurs mesures.
 
 **Caméra RGB-D** — Caméra qui fournit, pour chaque pixel, la couleur (Rouge, Vert, Bleu) et la
 **profondeur** (D, *depth*) : la distance de l'objet vu. Exemples : Intel RealSense, Orbbec Astra.
@@ -48,6 +54,9 @@ transporter les messages entre programmes et entre machines.
 
 **Dérive (drift)** — Erreur qui s'accumule avec le temps dans une estimation de position par
 *odométrie* : chaque petite erreur s'ajoute aux précédentes.
+
+**Facteur temps réel (RTF, real-time factor)** — Rapport entre le temps écoulé dans la
+simulation et le temps réel. RTF = 0,9 : la simulation avance à 90 % de la vitesse réelle.
 
 **Fermeture de boucle (loop closure)** — Moment où un *SLAM* reconnaît un endroit déjà visité. Il
 peut alors corriger toute la trajectoire et la carte accumulées depuis le premier passage.
@@ -75,23 +84,25 @@ un plan. Le TurtleBot3 porte un LDS (LiDAR 2D, 360°).
 **Masque (binaire)** — Image en noir et blanc où les pixels blancs sont ceux qui satisfont une
 condition (ex. : « la couleur est rouge »).
 
+**MCAP** — Format de fichier utilisé pour les *rosbags*, qui permet la compression (zstd).
+
+**Mermaid** — Langage texte qui permet de dessiner des schémas dans un fichier Markdown ; GitHub
+les affiche directement.
+
 **Message** — Donnée structurée échangée entre *nœuds* ROS 2 (ex. `sensor_msgs/LaserScan` pour un
 scan LiDAR).
 
 **Middleware** — Couche logicielle intermédiaire qui fait communiquer des programmes ; pour ROS 2,
 c'est l'implémentation *DDS* (Fast DDS par défaut).
 
-**Mermaid** — Langage texte qui permet de dessiner des schémas dans un fichier Markdown ; GitHub
-les affiche directement.
-
 **Nav2 (Navigation 2)** — Ensemble de paquets ROS 2 pour la navigation autonome : localisation,
 *cartes de coûts*, planification de chemin, suivi de trajectoire, comportements de secours.
 
-**Nœud (node)** — Programme ROS 2 qui remplit une fonction (lire un capteur, détecter une cible,
-commander les moteurs…) et communique avec les autres par *topics*.
-
 **Nuage de points (point cloud)** — Ensemble de points 3D, obtenu par exemple en projetant chaque
 pixel d'une image de profondeur dans l'espace.
+
+**Nœud (node)** — Programme ROS 2 qui remplit une fonction (lire un capteur, détecter une cible,
+commander les moteurs…) et communique avec les autres par *topics*.
 
 **Odométrie** — Estimation du déplacement du robot à partir de la rotation de ses roues (odométrie
 des roues) ou des images (odométrie visuelle). Précise à court terme, mais elle *dérive*.
@@ -101,10 +112,19 @@ des roues) ou des images (odométrie visuelle). Précise à court terme, mais el
 **Paramètre (ROS)** — Valeur de réglage d'un nœud (seuil, gain, vitesse…) modifiable sans changer
 le code, généralement depuis un fichier *YAML*.
 
+**Paramètres intrinsèques (calibration)** — Caractéristiques internes d'une caméra : focales
+$f_x, f_y$ et centre optique $(c_x, c_y)$, en pixels. Publiés dans `CameraInfo` (matrice K).
+
 **Profondeur (image de)** — Image où chaque pixel contient une distance au lieu d'une couleur.
+
+**Profondeur recalée (registered depth)** — Image de profondeur dont chaque pixel correspond
+exactement au même point que le pixel de l'image couleur.
 
 **Régulateur proportionnel (P)** — Loi de commande où la correction est proportionnelle à l'erreur :
 commande = gain × erreur.
+
+**Rendu hors écran (headless rendering)** — Calcul des images des caméras simulées sans ouvrir
+de fenêtre, utile pour les essais automatisés.
 
 **Repère (frame)** — Système d'axes attaché à un objet (robot, capteur, carte). Les positions sont
 toujours exprimées dans un repère donné. Voir *TF*.
@@ -138,6 +158,9 @@ stricte d'échéance.
 
 **Temps simulé (sim time)** — Horloge fournie par *Gazebo*. Les nœuds réglés avec
 `use_sim_time: true` l'utilisent à la place de l'horloge de l'ordinateur.
+
+**Texture** — Image plaquée sur la surface d'un objet 3D pour lui donner son apparence (motifs,
+couleurs). Dans Gazebo, `albedo_map`.
 
 **TF (transformations)** — Système ROS 2 qui tient à jour la position relative de tous les *repères*
 (carte, robot, capteurs) et permet de convertir une mesure d'un repère à un autre.

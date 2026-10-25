@@ -1,0 +1,85 @@
+# Pont Gazebo <-> ROS 2 (ros_gz_bridge / parameter_bridge).
+#
+# Les noms de topics caméra suivent la convention des pilotes de caméras RGB-D
+# réelles (RealSense, Orbbec) : /camera/color/... et /camera/depth/..., pour que
+# les nœuds du projet fonctionnent sans changement sur le robot réel (E5).
+# Le nuage de points Gazebo n'est pas transmis : il sera reconstruit côté ROS à
+# partir de l'image de profondeur, comme avec une vraie caméra.
+
+# Horloge de la simulation (temps simulé)
+- ros_topic_name: "clock"
+  gz_topic_name: "clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS
+
+# Commande de vitesse (entraînement différentiel)
+- ros_topic_name: "cmd_vel"
+  gz_topic_name: "cmd_vel"
+  ros_type_name: "geometry_msgs/msg/TwistStamped"
+  gz_type_name: "gz.msgs.Twist"
+  direction: ROS_TO_GZ
+
+# Odométrie des roues et transformation odom -> base_footprint
+- ros_topic_name: "odom"
+  gz_topic_name: "odom"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "tf"
+  gz_topic_name: "tf"
+  ros_type_name: "tf2_msgs/msg/TFMessage"
+  gz_type_name: "gz.msgs.Pose_V"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "joint_states"
+  gz_topic_name: "joint_states"
+  ros_type_name: "sensor_msgs/msg/JointState"
+  gz_type_name: "gz.msgs.Model"
+  direction: GZ_TO_ROS
+
+# Capteurs
+- ros_topic_name: "imu"
+  gz_topic_name: "imu"
+  ros_type_name: "sensor_msgs/msg/Imu"
+  gz_type_name: "gz.msgs.IMU"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "scan"
+  gz_topic_name: "scan"
+  ros_type_name: "sensor_msgs/msg/LaserScan"
+  gz_type_name: "gz.msgs.LaserScan"
+  direction: GZ_TO_ROS
+
+# Caméra RGB-D : couleur et profondeur issues du même capteur (même calibration)
+- ros_topic_name: "camera/color/image_raw"
+  gz_topic_name: "camera/rgbd/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "camera/color/camera_info"
+  gz_topic_name: "camera/rgbd/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "camera/depth/image_raw"
+  gz_topic_name: "camera/rgbd/depth_image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "camera/depth/camera_info"
+  gz_topic_name: "camera/rgbd/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+
+# Vérité terrain (position exacte fournie par le simulateur), pour évaluer le SLAM
+- ros_topic_name: "ground_truth/odom"
+  gz_topic_name: "ground_truth/odom"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS

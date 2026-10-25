@@ -1,0 +1,144 @@
+<?xml version="1.0"?>
+<!--
+  Salle as52_room : intérieur x dans [-3.5, 3.5] m, y dans [-2.5, 2.5] m, murs de 1,5 m.
+
+  Tous les murs sont des boîtes allongées selon x (longueur x 0,1 x 1,5 m), tournées
+  de 90° pour les murs est et ouest : ainsi chaque grande face reçoit sa texture
+  dans le même sens, sans déformation (image au même rapport largeur/hauteur que la face).
+-->
+<sdf version="1.8">
+  <model name="as52_room">
+    <static>true</static>
+
+    <!-- Sol texturé : visuel seulement, la collision est le plan du monde (z = 0) -->
+    <link name="floor">
+      <visual name="visual">
+        <pose>0 0 -0.001 0 0 0</pose>
+        <geometry>
+          <box><size>7.0 5.0 0.002</size></box>
+        </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <pbr>
+            <metal>
+              <albedo_map>model://as52_room/textures/floor.png</albedo_map>
+              <roughness>0.9</roughness>
+              <metalness>0</metalness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+    </link>
+
+    <link name="wall_north">
+      <pose>0 2.55 0.75 0 0 0</pose>
+      <collision name="collision">
+        <geometry><box><size>7.2 0.1 1.5</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>7.2 0.1 1.5</size></box></geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <pbr><metal>
+            <albedo_map>model://as52_room/textures/wall_north.png</albedo_map>
+            <roughness>0.9</roughness><metalness>0</metalness>
+          </metal></pbr>
+        </material>
+      </visual>
+    </link>
+
+    <link name="wall_south">
+      <pose>0 -2.55 0.75 0 0 0</pose>
+      <collision name="collision">
+        <geometry><box><size>7.2 0.1 1.5</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>7.2 0.1 1.5</size></box></geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <pbr><metal>
+            <albedo_map>model://as52_room/textures/wall_south.png</albedo_map>
+            <roughness>0.9</roughness><metalness>0</metalness>
+          </metal></pbr>
+        </material>
+      </visual>
+    </link>
+
+    <link name="wall_east">
+      <pose>3.55 0 0.75 0 0 1.5707963</pose>
+      <collision name="collision">
+        <geometry><box><size>5.0 0.1 1.5</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>5.0 0.1 1.5</size></box></geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <pbr><metal>
+            <albedo_map>model://as52_room/textures/wall_east.png</albedo_map>
+            <roughness>0.9</roughness><metalness>0</metalness>
+          </metal></pbr>
+        </material>
+      </visual>
+    </link>
+
+    <link name="wall_west">
+      <pose>-3.55 0 0.75 0 0 1.5707963</pose>
+      <collision name="collision">
+        <geometry><box><size>5.0 0.1 1.5</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>5.0 0.1 1.5</size></box></geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <pbr><metal>
+            <albedo_map>model://as52_room/textures/wall_west.png</albedo_map>
+            <roughness>0.9</roughness><metalness>0</metalness>
+          </metal></pbr>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Piliers : repères visibles à la fois par la caméra et par le LiDAR au centre de la salle -->
+    <link name="pillar_a">
+      <pose>-1.6 0.3 0.75 0 0 0</pose>
+      <collision name="collision">
+        <geometry><box><size>0.3 0.3 1.5</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>0.3 0.3 1.5</size></box></geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <pbr><metal>
+            <albedo_map>model://as52_room/textures/pillar_a.png</albedo_map>
+            <roughness>0.9</roughness><metalness>0</metalness>
+          </metal></pbr>
+        </material>
+      </visual>
+    </link>
+
+    <link name="pillar_b">
+      <pose>0.5 -0.6 0.75 0 0 0</pose>
+      <collision name="collision">
+        <geometry><box><size>0.3 0.3 1.5</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>0.3 0.3 1.5</size></box></geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <pbr><metal>
+            <albedo_map>model://as52_room/textures/pillar_b.png</albedo_map>
+            <roughness>0.9</roughness><metalness>0</metalness>
+          </metal></pbr>
+        </material>
+      </visual>
+    </link>
+
+  </model>
+</sdf>
