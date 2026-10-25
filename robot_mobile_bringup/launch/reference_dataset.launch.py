@@ -1,10 +1,15 @@
-"""Enregistre le jeu de données de référence : simulation + trajectoire scriptée + rosbag.
+"""Enregistre un jeu de données : simulation + trajectoire scriptée + rosbag.
 
 Une seule commande produit un enregistrement réutilisable pour les étapes suivantes
 (SLAM, perception) sans relancer la simulation :
 
     ros2 launch robot_mobile_bringup reference_dataset.launch.py
     ros2 launch robot_mobile_bringup reference_dataset.launch.py output:=/chemin/E1_reference
+
+Autre parcours (E2, localisation) :
+
+    ros2 launch robot_mobile_bringup reference_dataset.launch.py \
+        trajectory:=<bringup>/config/localization_trajectory.yaml x:=2.8 y:=1.8 yaw:=-1.5708
 
 Tout s'arrête automatiquement à la fin de la trajectoire.
 """
@@ -37,14 +42,14 @@ def generate_launch_description():
     bringup = get_package_share_directory('robot_mobile_bringup')
     default_output = os.path.join(
         os.path.expanduser('~'), 'as52_data', 'rosbags',
-        'E1_reference_' + time.strftime('%Y%m%d_%H%M%S'))
+        'dataset_' + time.strftime('%Y%m%d_%H%M%S'))
 
     output = LaunchConfiguration('output')
 
     simulation = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(bringup, 'launch', 'simulation.launch.py')),
-        launch_arguments={'gui': LaunchConfiguration('gui'),
-                          'rviz': LaunchConfiguration('rviz')}.items())
+        launch_arguments={name: LaunchConfiguration(name)
+                          for name in ('gui', 'rviz', 'x', 'y', 'yaw')}.items())
 
     # Compression zstd par message : réduit fortement la taille de la profondeur simulée
     recorder = ExecuteProcess(
@@ -55,16 +60,23 @@ def generate_launch_description():
     trajectory = Node(
         package='robot_mobile_evaluation',
         executable='reference_trajectory',
-        parameters=[os.path.join(bringup, 'config', 'reference_trajectory.yaml')],
+        parameters=[LaunchConfiguration('trajectory')],
         output='screen')
 
     stop_at_end = RegisterEventHandler(OnProcessExit(
         target_action=trajectory,
-        on_exit=[EmitEvent(event=Shutdown(reason='trajectoire de référence terminée'))]))
+        on_exit=[EmitEvent(event=Shutdown(reason='trajectoire terminée'))]))
 
     return LaunchDescription([
         DeclareLaunchArgument('output', default_value=default_output,
                               description='Dossier de sortie du rosbag (ne doit pas exister)'),
+        DeclareLaunchArgument(
+            'trajectory',
+            default_value=os.path.join(bringup, 'config', 'reference_trajectory.yaml'),
+            description='Fichier YAML de la trajectoire scriptée'),
+        DeclareLaunchArgument('x', default_value='-2.5', description='Position initiale x (m)'),
+        DeclareLaunchArgument('y', default_value='-1.5', description='Position initiale y (m)'),
+        DeclareLaunchArgument('yaw', default_value='0.0', description='Cap initial (rad)'),
         DeclareLaunchArgument('gui', default_value='false', description='Afficher Gazebo'),
         DeclareLaunchArgument('rviz', default_value='false', description='Afficher RViz'),
         simulation,

@@ -143,6 +143,10 @@ exactement au même point que le pixel de l'image couleur.
 **Régulateur proportionnel (P)** — Loi de commande où la correction est proportionnelle à l'erreur :
 commande = gain × erreur.
 
+**Relocalisation** — Moment où un robot qui ne sait plus (ou pas encore) où il se trouve dans
+une carte reconnaît un lieu et retrouve sa position. Le cas où il ne connaît pas du tout sa
+position de départ est appelé problème du « robot kidnappé ».
+
 **Rendu hors écran (headless rendering)** — Calcul des images des caméras simulées sans ouvrir
 de fenêtre, utile pour les essais automatisés.
 

@@ -3,14 +3,14 @@
 > **Résumé en 3 lignes**
 > 1. Cinq méthodes ont été comparées **sur exactement les mêmes données** (le jeu de référence d'E1) : odométrie seule, trois configurations de RTAB-Map (caméra + roues, caméra seule, caméra + LiDAR + roues) et slam_toolbox (LiDAR).
 > 2. La démarche a permis de **diagnostiquer puis corriger** les défauts de la configuration visuelle : en limitant le recalage visuel aux points à moins de 4 m, l'erreur de RTAB-Map RGB-D a été divisée par 4 et ses contraintes fausses supprimées.
-> 3. Résultat : **RTAB-Map caméra RGB-D + LiDAR + roues** est la configuration la plus précise ; elle est proposée pour la suite du projet. Reste à tester la localisation sur une carte enregistrée.
+> 3. Résultat : **RTAB-Map caméra RGB-D + LiDAR + roues** est la plus précise (1 cm en cartographie, 2 cm en localisation sur un nouveau parcours) et est retenue (D-014) ; limite identifiée : sans pose de départ connue, la relocalisation par l'apparence échoue quand les vues diffèrent trop de celles de la carte.
 
 | Champ | Valeur |
 |---|---|
-| Statut | 🟡 en cours — reste : localisation sur une carte enregistrée (partie 2), choix de configuration à valider |
-| Dates | début 2026-10-25 |
-| Exigences couvertes | EX-VSLAM-1 (carte), EX-VSLAM-2 (localisation, en partie) — voir [analyse du sujet](../00_analyse_du_sujet.md) |
-| Décisions liées | [D-005](../decisions.md#d-005--rtab-map-comme-outil-de-v-slam-principal), [D-012](../decisions.md#d-012--paquet-robot_mobile_evaluation-pour-les-outils-dexpérience), [D-013](../decisions.md#d-013--protocole-de-comparaison-des-slam), [D-014](../decisions.md#d-014--configuration-slam-retenue-pour-la-suite) |
+| Statut | 🟢 terminée |
+| Dates | début 2026-10-25 — fin 2026-10-25 |
+| Exigences couvertes | EX-VSLAM-1 (carte), EX-VSLAM-2 (localisation) — voir [analyse du sujet](../00_analyse_du_sujet.md) |
+| Décisions liées | [D-005](../decisions.md#d-005--rtab-map-comme-outil-de-v-slam-principal), [D-012](../decisions.md#d-012--paquet-robot_mobile_evaluation-pour-les-outils-dexpérience), [D-013](../decisions.md#d-013--protocole-de-comparaison-des-slam), [D-014](../decisions.md#d-014--configuration-slam-retenue-pour-la-suite), [D-015](../decisions.md#d-015--démarrage-de-la-navigation-depuis-une-pose-connue) |
 | Entrées de journal | [2026-10-25](../journal/2026-10-25_E2_vslam.md) |
 
 ---
@@ -23,7 +23,7 @@ qualité obtenue par rapport à la vérité terrain du simulateur.
 - [x] Une carte est construite par RTAB-Map et enregistrée (base de données `.db` + carte d'occupation).
 - [x] Les erreurs de trajectoire (ATE, RPE) sont mesurées et interprétées pour chaque méthode.
 - [x] La comparaison avec l'odométrie seule et avec un SLAM LiDAR (slam_toolbox) est faite.
-- [ ] La carte enregistrée est rechargée en **mode localisation** sur un nouveau parcours (partie 2).
+- [x] La carte enregistrée est rechargée en **mode localisation** sur un nouveau parcours (§ 8.5).
 
 ## 2. Pourquoi cette étape ?
 
@@ -112,7 +112,25 @@ doit donner une RPE de 1° ([`test_metrics.py`](../../robot_mobile_evaluation/te
 Contrôle supplémentaire : l'odométrie (A), identique dans tous les essais puisqu'elle vient du
 même rosbag, obtient exactement les mêmes valeurs à chaque fois (écart-type nul).
 
-### 5.4 Démarche de diagnostic
+### 5.4 Protocole de localisation (partie 2)
+
+Un **second parcours** a été enregistré, volontairement différent du premier : sens **horaire**
+(inverse de la cartographie), à 0,7 m des murs (1 m pour la référence), départ au coin nord-est
+face au sud (`config/localization_trajectory.yaml`, 18,4 m, 114 s). RTAB-Map est relancé en
+**mode localisation** (`Mem/IncrementalMemory = false`) sur une copie de la carte construite
+pendant le parcours de référence. L'estimation est comparée à la vérité **sans alignement** :
+le repère de la carte est connu exactement (pose de départ du parcours de référence).
+
+Deux scénarios :
+1. **Relocalisation globale** (« robot kidnappé ») : RTAB-Map ne connaît pas la pose de départ et
+   doit reconnaître la salle par l'apparence.
+2. **Pose de départ connue** (`initial_pose`) : situation habituelle d'un robot qui démarre à un
+   endroit connu ; il doit ensuite **rester** localisé.
+
+Mesures (`evaluate_localization`) : temps et distance avant relocalisation (première erreur sous
+10 cm), puis erreur RMS et maximale, erreur de cap, part du temps sous 10 cm.
+
+### 5.5 Démarche de diagnostic
 
 Quand un résultat contredisait l'attente, une **hypothèse** a été formulée puis **testée par une
 mesure** avant de changer un réglage, et un seul réglage a été changé à la fois (§ 8.2).
@@ -226,7 +244,7 @@ mouvement diverge (déplacement prédit de 6 m), certaines images demandent jusq
 calcul et des images sont sautées. La perte est donc **reproductible et liée au lieu** ; sa cause
 précise n'est pas encore identifiée. Ses métriques ne portent que sur la partie suivie.
 
-### 8.4 Figures
+### 8.4 Figures de la cartographie
 
 ![Trajectoires estimées par chaque méthode](../figures/E2_trajectoires.png)
 
@@ -241,6 +259,46 @@ précise n'est pas encore identifiée. Ses métriques ne portent que sur la part
 *Cartes produites (gris : inconnu, blanc : libre, noir : occupé), placées dans le monde avec la
 pose vraie de départ, et plan réel de la salle (rouge). La table n'apparaît que par son pied :
 son plateau (0,75 m) est au-dessus de la hauteur d'obstacle retenue (0,4 m), et le robot passe dessous.*
+
+### 8.5 Localisation dans la carte (partie 2)
+
+**Scénario 1 — relocalisation globale (pose de départ inconnue)**
+
+| Méthode | Essais | Relocalisation | Erreur RMS après (cm) | Erreur max après (cm) | Temps < 10 cm après |
+|---|---|---|---|---|---|
+| B. RTAB-Map RGB-D + roues | 1 | après 54 s (8,8 m) | 24,9 | 45,0 | 12 % |
+| D. RTAB-Map RGB-D + LiDAR + roues | 3 | **jamais** (0 / 3) | — | — | — |
+
+**Diagnostic.** Près de 200 candidates de relocalisation ont été rejetées dans chaque essai, avec
+0 point cohérent. En comparant la position réelle des nœuds candidats de la carte à la position
+réelle du robot au même moment : distance médiane **3,4 m**, moins de 15 % des candidates à moins
+de 1 m. La reconnaissance par l'apparence propose donc surtout de **mauvais endroits** qui se
+ressemblent : par exemple, en longeant le mur sud vers l'ouest, le robot voit le mur ouest comme
+lors de la cartographie… mais celle-ci l'avait vu depuis le côté nord, 3,3 m plus loin. Le
+parcours inverse ne revoit presque jamais un lieu **sous le même angle** que la carte. Pourquoi D
+échoue là où B a réussi une fois n'est pas établi (un seul essai pour B ; piste : le recalage par
+ICP de D part de la pose courante, fausse de plusieurs mètres avant relocalisation).
+
+**Scénario 2 — pose de départ connue**
+
+| Méthode | Essais | Erreur RMS (cm) | Erreur max (cm) | Cap RMS (°) | Temps < 10 cm |
+|---|---|---|---|---|---|
+| B. RTAB-Map RGB-D + roues | 1 | 8,7 | 19,8 | 1,76 | 77 % |
+| **D. RTAB-Map RGB-D + LiDAR + roues** | 3 | **2,0 ± 0,0** | **3,9 ± 0,1** | **0,36 ± 0,02** | **100 %** |
+
+Une fois la pose de départ connue, D **reste localisé à 2 cm près sur tout le parcours inverse**,
+de façon reproductible ; B dérive entre deux rares relocalisations visuelles, dont une imprécise
+(saut de 8 à 18 cm vers 45 s).
+
+![Localisation, pose de départ inconnue](../figures/E2_localisation_globale.png)
+
+*Scénario 1 : erreur de position dans la carte au cours du temps (échelle logarithmique). Avant
+relocalisation, l'erreur est de plusieurs mètres (le robot se croit à l'origine de la carte).*
+
+![Localisation, pose de départ connue](../figures/E2_localisation_pose_connue.png)
+
+*Scénario 2 : erreur de position (à gauche) et trajectoire estimée par D une fois localisé
+(à droite), superposée à la vérité terrain.*
 
 ## 9. Analyse et discussion
 
@@ -275,7 +333,17 @@ jamais repartir : elle ne peut pas servir seule à la navigation sans un repli (
    l'incertitude d'odométrie semblait net (ATE du graphe 5,0 → 3,1 cm) ; sur 3 essais, il ne
    l'est pas.
 
-**Limites.** Un seul parcours, dans une petite salle ; un seul essai pour C et E ; une
+**Localisation : le LiDAR maintient, la vision retrouve… si les vues se ressemblent.** Avec une
+pose de départ connue, le LiDAR de D, qui voit à 360° et ne dépend pas de l'angle de vue,
+recale le robot en permanence sur la carte : 2 cm d'erreur dans le sens inverse de la
+cartographie. La vision seule (B) a besoin de revoir des vues proches de celles de la carte pour
+se recaler, et dérive entre-temps. La **relocalisation globale** par l'apparence, elle, échoue
+quand les vues diffèrent trop de celles de la carte. Conséquences pratiques : démarrer la
+navigation depuis une pose connue ([D-015](../decisions.md#d-015--démarrage-de-la-navigation-depuis-une-pose-connue)),
+et, si l'on veut une relocalisation globale robuste, **cartographier dans les deux sens** (ou en
+tournant sur place à intervalles réguliers) pour que la carte contienne des vues variées.
+
+**Limites.** Peu de parcours, dans une petite salle ; un seul essai pour C, E et pour B en localisation ; une
 simulation favorable (éclairage parfait, profondeur peu bruitée, pas de flou) : les performances
 réelles seront moins bonnes (E5). Les damiers identiques présents dans toutes les textures créent
 de **fausses ressemblances** (candidates de fermeture rejetées par la vérification géométrique) :
@@ -301,6 +369,17 @@ ROS_DOMAIN_ID=42 ros2 launch robot_mobile_bringup slam_evaluation.launch.py meth
     extra_params:=$PWD/robot_mobile_bringup/config/slam/tuning/vis_max_depth_4m.yaml
 ros2 run robot_mobile_evaluation evaluate_slam ~/as52_data/slam_runs/essai ~/as52_data/slam_runs/essai/figures
 
+# Localisation sur un second parcours (voir aussi le README)
+ROS_DOMAIN_ID=43 GZ_PARTITION=eval ros2 launch robot_mobile_bringup reference_dataset.launch.py \
+    trajectory:=$PWD/install/robot_mobile_bringup/share/robot_mobile_bringup/config/localization_trajectory.yaml \
+    x:=2.8 y:=1.8 yaw:=-1.5708 output:=~/as52_data/rosbags/E2_localisation
+ROS_DOMAIN_ID=42 ros2 launch robot_mobile_bringup slam_evaluation.launch.py localization:=true \
+    map_database:=~/as52_data/slam_runs/E2_final/rtabmap_rgbd_scan_1/rtabmap.db \
+    bag:=~/as52_data/rosbags/E2_localisation initial_pose:="5.3008 3.3010 0 0 0 -1.5708" \
+    output:=~/as52_data/slam_runs/localisation/rtabmap_rgbd_scan_1
+ros2 run robot_mobile_evaluation evaluate_localization ~/as52_data/slam_runs/localisation \
+    ~/as52_data/slam_runs/E2_final/rtabmap_rgbd_scan_1/ground_truth.tum ~/as52_data/slam_runs/localisation/figures
+
 # SLAM en direct sur la simulation (deux terminaux)
 ros2 launch robot_mobile_bringup simulation.launch.py
 ros2 launch robot_mobile_bringup slam.launch.py method:=rtabmap_rgbd_scan
@@ -309,14 +388,14 @@ ros2 launch robot_mobile_bringup slam.launch.py method:=rtabmap_rgbd_scan
 ## 11. Bilan et suites
 
 - **Acquis** : chaîne d'évaluation complète et testée ; comparaison chiffrée de 5 méthodes ;
-  deux défauts de configuration diagnostiqués et corrigés ; configuration D proposée pour la suite
+  deux défauts de configuration diagnostiqués et corrigés ; configuration D retenue pour la suite
   ([D-014](../decisions.md#d-014--configuration-slam-retenue-pour-la-suite)).
-- **Reste (partie 2)** : enregistrer un **second parcours**, différent du premier, puis relancer
-  la configuration D en **mode localisation** sur la carte du parcours de référence ; mesurer
-  l'erreur de localisation et le temps nécessaire pour se relocaliser.
+- **Localisation** : sur un parcours inverse, D reste localisé à 2 cm près depuis une pose de
+  départ connue ; la relocalisation globale par l'apparence échoue (limite documentée, D-015).
 - **Pistes facultatives** : comprendre la perte de suivi de l'odométrie visuelle (réinitialisation
-  automatique `Odom/ResetCountdown`, stratégie image à image) ; retirer les damiers identiques des
-  textures (nécessiterait un nouveau jeu de données).
+  automatique `Odom/ResetCountdown`, stratégie image à image) ; cartographier dans les deux sens
+  pour rendre la relocalisation globale possible ; retirer les damiers identiques des textures
+  (nécessiterait de nouveaux jeux de données).
 - **Transmis à E3 / E4** : le SLAM D fournit `map → odom` et une carte d'occupation propre ;
   la navigation vers une cible pourra s'appuyer sur une position précise au centimètre.
 
@@ -327,3 +406,4 @@ ros2 launch robot_mobile_bringup slam.launch.py method:=rtabmap_rgbd_scan
 3. La meilleure configuration combine **caméra RGB-D, LiDAR et roues** (1 cm d'erreur) : le LiDAR apporte la précision locale, la vision la reconnaissance de lieux.
 4. Un défaut a été **diagnostiqué par la mesure** (contraintes de boucle fausses mais « sûres ») et corrigé : erreur divisée par 4, calcul 3 fois plus rapide.
 5. La vision seule est précise mais **fragile** (perte de suivi reproductible) : la fusion de capteurs est nécessaire.
+6. En **localisation** sur un parcours inverse, la configuration retenue reste à **2 cm** près depuis une pose connue ; sans pose connue, la reconnaissance de lieux échoue car les vues sont trop différentes de la carte : il faudra démarrer d'une pose connue ou cartographier dans les deux sens.

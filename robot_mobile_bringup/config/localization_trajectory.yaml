@@ -1,0 +1,20 @@
+# Trajectoire de localisation E2 : un tour de la salle dans le sens HORAIRE (inverse du parcours
+# de référence), à 0,7 m des murs (1 m pour la référence), en partant du coin nord-est.
+# Les vues de la caméra diffèrent donc de celles de la cartographie : le robot doit
+# reconnaître la salle sous des angles nouveaux pour se localiser dans la carte.
+#
+# Départ : (2.8, 1.8), face au sud (cap -pi/2) -> arguments x:=2.8 y:=1.8 yaw:=-1.5708
+#   côté 1 : 3,6 m vers le sud    -> 18 s à 0,2 m/s
+#   virage : 90° à droite         -> pi/2 / 0,4 rad/s = 3,927 s
+#   côté 2 : 5,6 m vers l'ouest   -> 28 s
+#   ... puis côtés 3 (nord) et 4 (est), retour au départ
+#
+# Durée totale : 107,7 s (+ 5 s d'attente immobile au départ).
+reference_trajectory:
+  ros__parameters:
+    use_sim_time: true
+    start_delay: 5.0                 # s, robot immobile avant de partir
+    rate_hz: 20.0                    # Hz, fréquence d'envoi des commandes
+    linear_speeds:  [0.2, 0.0,    0.2,  0.0,    0.2,  0.0,    0.2,  0.0]     # m/s
+    angular_speeds: [0.0, -0.4,   0.0,  -0.4,   0.0,  -0.4,   0.0,  -0.4]    # rad/s (à droite)
+    durations:      [18.0, 3.927, 28.0, 3.927, 18.0, 3.927, 28.0, 3.927]   # s

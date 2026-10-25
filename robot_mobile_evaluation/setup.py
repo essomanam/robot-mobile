@@ -24,6 +24,7 @@ setup(
             'analyze_dataset = robot_mobile_evaluation.analyze_dataset:main',
             'trajectory_logger = robot_mobile_evaluation.trajectory_logger:main',
             'evaluate_slam = robot_mobile_evaluation.evaluate_slam:main',
+            'evaluate_localization = robot_mobile_evaluation.evaluate_localization:main',
         ],
     },
 )

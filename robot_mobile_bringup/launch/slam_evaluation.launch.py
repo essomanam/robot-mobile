@@ -8,11 +8,17 @@ Exemple :
     ros2 launch robot_mobile_bringup slam_evaluation.launch.py method:=rtabmap_rgbd \
         bag:=~/as52_data/rosbags/E1_reference_20261024 output:=~/as52_data/slam_runs/rtabmap_rgbd_1
 
+Localisation sur une carte existante (RTAB-Map) : la carte est copiée dans `output`
+(l'originale n'est jamais modifiée) puis RTAB-Map est lancé en mode localisation :
+    ros2 launch robot_mobile_bringup slam_evaluation.launch.py localization:=true \
+        map_database:=<essai de cartographie>/rtabmap.db bag:=<autre parcours> output:=...
+
 Attention : aucune simulation ne doit tourner sur le même domaine ROS (elle publierait
 aussi /clock, /tf, /odom...). Sinon, isoler l'essai : ROS_DOMAIN_ID=42 ros2 launch ...
 """
 
 import os
+import shutil
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -32,12 +38,23 @@ def launch_setup(context):
     bag = os.path.expanduser(LaunchConfiguration('bag').perform(context))
     output = os.path.expanduser(LaunchConfiguration('output').perform(context))
     rate = LaunchConfiguration('rate').perform(context)
+    localization = LaunchConfiguration('localization').perform(context).lower() == 'true'
     os.makedirs(output, exist_ok=True)  # RTAB-Map y crée sa base de données dès le démarrage
+    database = os.path.join(output, 'rtabmap.db')
+    if localization:
+        if method.startswith('slam_toolbox'):
+            raise RuntimeError('localisation évaluée seulement pour RTAB-Map')
+        source = os.path.expanduser(LaunchConfiguration('map_database').perform(context))
+        if not os.path.isfile(source):
+            raise RuntimeError(f'carte introuvable : {source}')
+        shutil.copyfile(source, database)
 
     slam = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(bringup, 'launch', 'slam.launch.py')),
         launch_arguments={'method': method,
-                          'database_path': os.path.join(output, 'rtabmap.db'),
+                          'database_path': database,
+                          'localization': str(localization).lower(),
+                          'initial_pose': LaunchConfiguration('initial_pose'),
                           'extra_params': LaunchConfiguration('extra_params')}.items())
 
     logger = Node(
@@ -63,7 +80,7 @@ def launch_setup(context):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument('method', default_value='rtabmap_rgbd',
+        DeclareLaunchArgument('method', default_value='rtabmap_rgbd_scan',
                               description='Méthode de SLAM (voir slam.launch.py)'),
         DeclareLaunchArgument(
             'bag', default_value='~/as52_data/rosbags/E1_reference_20261024',
@@ -73,5 +90,11 @@ def generate_launch_description():
                               description='Vitesse de rejeu (1.0 = temps réel)'),
         DeclareLaunchArgument('extra_params', default_value='',
                               description='RTAB-Map : fichier YAML de réglage chargé en dernier'),
+        DeclareLaunchArgument('localization', default_value='false',
+                              description='RTAB-Map : localisation sur la carte map_database'),
+        DeclareLaunchArgument('map_database', default_value='',
+                              description='Carte RTAB-Map (.db) à utiliser en localisation'),
+        DeclareLaunchArgument('initial_pose', default_value='',
+                              description='Localisation : pose de départ connue dans la carte'),
         OpaqueFunction(function=launch_setup),
     ])

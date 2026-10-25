@@ -17,7 +17,7 @@ grâce à la profondeur. Le travail est développé en simulation (Gazebo) puis 
 |---|---|---|
 | E0 | Fondations : dépôt, documentation, analyse, feuille de route | 🟢 terminée |
 | E1 | Simulation Gazebo et acquisition des données capteurs | 🟡 en cours |
-| E2 | Cartographie et localisation visuelle (V-SLAM, RTAB-Map) | 🟡 en cours |
+| E2 | Cartographie et localisation visuelle (V-SLAM, RTAB-Map) | 🟢 terminée |
 | E3 | Navigation guidée par la vision | ⚪ à faire |
 | E4 | Perception de la profondeur et évitement d'obstacles | ⚪ à faire |
 | E5 | Validation sur le robot réel | ⚪ à faire |
@@ -133,12 +133,12 @@ La seconde calcule les fréquences des capteurs et compare l'odométrie à la v�
 Pendant la simulation (autre terminal), construire une carte avec RTAB-Map :
 
 ```bash
-ros2 launch robot_mobile_bringup slam.launch.py                       # RTAB-Map RGB-D + roues
+ros2 launch robot_mobile_bringup slam.launch.py                       # RTAB-Map RGB-D + LiDAR + roues
 ros2 launch robot_mobile_bringup slam.launch.py method:=slam_toolbox  # autre méthode
 ```
 
-Méthodes : `rtabmap_rgbd` (caméra RGB-D + roues), `rtabmap_rgbd_vo` (caméra seule),
-`rtabmap_rgbd_scan` (caméra + LiDAR + roues), `slam_toolbox` (LiDAR + roues). La carte
+Méthodes : `rtabmap_rgbd_scan` (caméra RGB-D + LiDAR + roues, **par défaut**, la plus précise),
+`rtabmap_rgbd` (caméra + roues), `rtabmap_rgbd_vo` (caméra seule), `slam_toolbox` (LiDAR + roues). La carte
 RTAB-Map est enregistrée dans `~/.ros/rtabmap.db` (`database_path:=` pour la changer).
 
 Comparer les méthodes sur le jeu de données de référence (≈ 15 min, sans simulation) :
@@ -149,6 +149,25 @@ robot_mobile_bringup/scripts/run_slam_comparison.sh ~/as52_data/slam_runs/<essai
 
 Chaque méthode rejoue le même rosbag ; le script produit un tableau d'erreurs (ATE, RPE) et des
 figures (trajectoires, erreurs, cartes) dans `~/as52_data/slam_runs/<essai>/`.
+
+Se localiser dans une carte enregistrée, sur un autre parcours (sens horaire, départ au coin
+nord-est) :
+
+```bash
+# 1. enregistrer le second parcours (≈ 3 min, sans fenêtre)
+ros2 launch robot_mobile_bringup reference_dataset.launch.py \
+    trajectory:=$PWD/install/robot_mobile_bringup/share/robot_mobile_bringup/config/localization_trajectory.yaml \
+    x:=2.8 y:=1.8 yaw:=-1.5708 output:=~/as52_data/rosbags/E2_localisation
+
+# 2. localisation dans la carte d'un essai de cartographie, puis évaluation
+ROS_DOMAIN_ID=42 ros2 launch robot_mobile_bringup slam_evaluation.launch.py localization:=true \
+    map_database:=<essai de cartographie>/rtabmap.db bag:=~/as52_data/rosbags/E2_localisation \
+    output:=~/as52_data/slam_runs/localisation/rtabmap_rgbd_scan_1
+ros2 run robot_mobile_evaluation evaluate_localization ~/as52_data/slam_runs/localisation \
+    <essai de cartographie>/ground_truth.tum ~/as52_data/slam_runs/localisation/figures
+```
+
+Si une simulation est déjà ouverte, isoler l'enregistrement : `ROS_DOMAIN_ID=43 GZ_PARTITION=eval ros2 launch ...`.
 
 *Les scénarios des étapes suivantes (navigation visuelle, évitement) seront ajoutés ici.*
 

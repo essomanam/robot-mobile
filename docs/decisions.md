@@ -38,7 +38,8 @@
 | [D-011](#d-011--jeu-de-données-de-référence-scripté-et-enregistré) | Jeu de données de référence scripté et enregistré | acceptée | 2026-10-24 |
 | [D-012](#d-012--paquet-robot_mobile_evaluation-pour-les-outils-dexpérience) | Paquet `robot_mobile_evaluation` pour les outils d'expérience | acceptée | 2026-10-25 |
 | [D-013](#d-013--protocole-de-comparaison-des-slam) | Protocole de comparaison des SLAM | acceptée | 2026-10-25 |
-| [D-014](#d-014--configuration-slam-retenue-pour-la-suite) | Configuration SLAM retenue pour la suite | proposée | 2026-10-25 |
+| [D-014](#d-014--configuration-slam-retenue-pour-la-suite) | Configuration SLAM retenue pour la suite | acceptée | 2026-10-25 |
+| [D-015](#d-015--démarrage-de-la-navigation-depuis-une-pose-connue) | Démarrage de la navigation depuis une pose connue | proposée | 2026-10-25 |
 
 ---
 
@@ -209,10 +210,22 @@
 
 | Date | Statut | Étape |
 |---|---|---|
-| 2026-10-25 | proposée — à valider par l'étudiant | E2 → E3, E4 |
+| 2026-10-25 | acceptée (validée par l'étudiant le 2026-10-25) | E2 → E3, E4 |
 
 - **Contexte** : comparaison E2 de cinq méthodes sur le même jeu de données ([fiche E2](etapes/E2_vslam.md#81-comparaison-des-méthodes-configuration-finale)).
 - **Options** : B RTAB-Map RGB-D + roues (ATE 3,2 cm) ; C caméra seule (fragile, perte de suivi) ; D RTAB-Map RGB-D + LiDAR + roues (ATE 1,0 cm, erreur finale 0,4 cm) ; E slam_toolbox (ATE 1,3 cm, erreur finale 3 cm).
-- **Décision proposée** : **D** (`method:=rtabmap_rgbd_scan`) pour la navigation des étapes E3 et E4, avec les réglages finaux (incertitude d'odométrie explicite, `Vis/MaxDepth` = 4 m) ; E (slam_toolbox) comme solution de repli si le calcul de RTAB-Map posait problème sur le matériel réel.
+- **Décision** : **D** (`method:=rtabmap_rgbd_scan`) pour la navigation des étapes E3 et E4, avec les réglages finaux (incertitude d'odométrie explicite, `Vis/MaxDepth` = 4 m) ; E (slam_toolbox) comme solution de repli si le calcul de RTAB-Map posait problème sur le matériel réel.
 - **Justification** : meilleure précision et meilleure carte, faible variabilité (3 essais) ; utilise la caméra RGB-D **et** le LiDAR comme le demande le sujet ; la vision apporte la reconnaissance de lieux, le LiDAR la précision locale.
-- **Conséquences** : à confirmer en mode localisation (E2, partie 2) ; `slam.launch.py` garde `rtabmap_rgbd` par défaut tant que cette décision n'est pas validée.
+- **Conséquences** : `rtabmap_rgbd_scan` devient la méthode par défaut de `slam.launch.py` et `slam_evaluation.launch.py` ; à confirmer en mode localisation (E2, partie 2).
+
+### D-015 — Démarrage de la navigation depuis une pose connue
+
+| Date | Statut | Étape |
+|---|---|---|
+| 2026-10-25 | proposée — à valider par l'étudiant | E3, E4, E5 |
+
+- **Contexte** : en localisation sur un parcours inverse ([fiche E2 § 8.5](etapes/E2_vslam.md#85-localisation-dans-la-carte-partie-2)), la configuration D reste localisée à 2 cm près depuis une pose de départ connue, mais **ne se relocalise jamais** quand la pose de départ est inconnue (vues trop différentes de celles de la carte).
+- **Options** : (a) démarrer depuis une pose connue (point de départ fixe, ou pose donnée par l'opérateur dans RViz, « 2D Pose Estimate ») ; (b) rendre la relocalisation globale robuste en cartographiant dans les deux sens ; (c) les deux.
+- **Décision proposée** : (a) pour les étapes E3 et E4 (simple, mesuré) ; (b) gardée comme amélioration si le temps le permet ou si la démonstration l'exige.
+- **Justification** : c'est la situation normale d'un robot qui démarre à sa base ; le résultat mesuré dans ce cas est excellent (2 cm, 100 % du temps sous 10 cm).
+- **Conséquences** : les launch de navigation devront accepter une pose de départ (`initial_pose`) ou s'appuyer sur `/initialpose` (RViz) ; le scénario de démonstration (E6) partira d'un point de départ connu.

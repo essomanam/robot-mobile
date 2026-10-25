@@ -1,9 +1,9 @@
 """Lance un SLAM du projet, sur la simulation en direct ou sur un rosbag rejoué.
 
 Méthodes (argument method) :
-    rtabmap_rgbd       B. RTAB-Map, caméra RGB-D + odométrie des roues (configuration principale)
+    rtabmap_rgbd       B. RTAB-Map, caméra RGB-D + odométrie des roues
     rtabmap_rgbd_vo    C. RTAB-Map, caméra RGB-D seule (odométrie visuelle, sans les roues)
-    rtabmap_rgbd_scan  D. RTAB-Map, caméra RGB-D + LiDAR + odométrie des roues
+    rtabmap_rgbd_scan  D. RTAB-Map, caméra RGB-D + LiDAR + odométrie des roues (par défaut, D-014)
     slam_toolbox       E. slam_toolbox, LiDAR + odométrie des roues
 
 Exemples :
@@ -37,6 +37,7 @@ def launch_setup(context):
     localization = LaunchConfiguration('localization').perform(context).lower() == 'true'
     database = os.path.expanduser(LaunchConfiguration('database_path').perform(context))
     extra = LaunchConfiguration('extra_params').perform(context)
+    initial_pose = LaunchConfiguration('initial_pose').perform(context)
     if method not in METHODS:
         raise RuntimeError(f'method inconnue : {method} (choix : {", ".join(METHODS)})')
 
@@ -58,6 +59,9 @@ def launch_setup(context):
     if localization:
         # carte figée : on se localise dans la carte enregistrée sans la modifier
         overrides.update({'Mem/IncrementalMemory': 'false', 'Mem/InitWMWithAllNodes': 'true'})
+        if initial_pose:
+            # pose de départ connue dans la carte : « x y z roulis tangage lacet »
+            overrides['initial_pose'] = initial_pose
     parameters.append(overrides)
 
     remappings = CAMERA_REMAPPINGS + [('scan', '/scan'), ('map', '/map')]
@@ -82,7 +86,7 @@ def launch_setup(context):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument('method', default_value='rtabmap_rgbd',
+        DeclareLaunchArgument('method', default_value='rtabmap_rgbd_scan',
                               description='Méthode : ' + ', '.join(METHODS)),
         DeclareLaunchArgument('localization', default_value='false',
                               description='RTAB-Map : localisation sur une carte existante'),
@@ -90,5 +94,8 @@ def generate_launch_description():
                               description='RTAB-Map : base de données (carte) lue ou écrite'),
         DeclareLaunchArgument('extra_params', default_value='',
                               description='RTAB-Map : fichier YAML de réglage chargé en dernier'),
+        DeclareLaunchArgument('initial_pose', default_value='',
+                              description='RTAB-Map, localisation : pose de départ dans la carte '
+                                          '"x y z roulis tangage lacet" (vide = inconnue)'),
         OpaqueFunction(function=launch_setup),
     ])

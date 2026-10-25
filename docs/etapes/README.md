@@ -9,7 +9,7 @@ correspondant du rapport.
 |---|---|---|
 | E0 — Fondations | [E0_fondations.md](E0_fondations.md) | 🟢 terminée |
 | E1 — Simulation et acquisition | [E1_simulation.md](E1_simulation.md) | 🟡 en cours |
-| E2 — V-SLAM | [E2_vslam.md](E2_vslam.md) | 🟡 en cours |
+| E2 — V-SLAM | [E2_vslam.md](E2_vslam.md) | 🟢 terminée |
 | E3 — Navigation guidée par la vision | à créer | ⚪ à faire |
 | E4 — Perception et évitement | à créer | ⚪ à faire |
 | E5 — Validation matérielle | à créer | ⚪ à faire |
