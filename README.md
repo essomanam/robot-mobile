@@ -16,7 +16,7 @@ grâce à la profondeur. Le travail est développé en simulation (Gazebo) puis 
 | Étape | Contenu | Statut |
 |---|---|---|
 | E0 | Fondations : dépôt, documentation, analyse, feuille de route | 🟢 terminée |
-| E1 | Simulation Gazebo et acquisition des données capteurs | 🟡 en cours |
+| E1 | Simulation Gazebo et acquisition des données capteurs | 🟢 terminée |
 | E2 | Cartographie et localisation visuelle (V-SLAM, RTAB-Map) | 🟢 terminée |
 | E3 | Navigation guidée par la vision | ⚪ à faire |
 | E4 | Perception de la profondeur et évitement d'obstacles | ⚪ à faire |

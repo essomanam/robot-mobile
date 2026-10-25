@@ -7,8 +7,8 @@
 
 | Champ | Valeur |
 |---|---|
-| Statut | 🟡 en cours — reste : pilotage au clavier à confirmer, panneau « Image profondeur » de RViz (§ 8.5) |
-| Dates | début 2026-10-24 |
+| Statut | 🟢 terminée |
+| Dates | début 2026-10-24 — fin 2026-10-25 |
 | Exigences couvertes | EX-SIM-1, EX-SIM-2 (voir [analyse du sujet](../00_analyse_du_sujet.md)) |
 | Décisions liées | [D-006](../decisions.md#d-006--dépôt-organisé-en-plusieurs-paquets), [D-008](../decisions.md#d-008--description-du-robot--sdf-pour-gazebo-urdf-pour-ros), [D-009](../decisions.md#d-009--caméra-rgb-d-simulée-et-noms-des-topics), [D-010](../decisions.md#d-010--scène-simulée-dédiée-as52_room), [D-011](../decisions.md#d-011--jeu-de-données-de-référence-scripté-et-enregistré) |
 | Entrées de journal | [2026-10-24](../journal/2026-10-24_E1_simulation.md) |
@@ -267,8 +267,14 @@ Deux points relevés pendant ce contrôle :
 
 | Constat | Diagnostic | Suite |
 |---|---|---|
-| Le robot ne bougeait pas au clavier | La chaîne `/cmd_vel` → pont → Gazebo fonctionne (le robot avance de 0,22 m avec une commande envoyée par `ros2 topic pub`) ; `teleop_twist_keyboard` lit les touches dans **son propre terminal**, qui doit être la fenêtre active | Commande et consigne précisées dans le README ; à confirmer |
-| Panneau « Image profondeur » entièrement noir | 13 % des pixels valent +∞ (au-delà de 8 m). Avec la normalisation automatique de RViz, l'échelle va jusqu'à l'infini et toute l'image devient noire. La configuration désactive cette normalisation (plage fixe 0–8 m), mais le réglage ne semble pas appliqué au chargement | À vérifier dans le panneau Displays ; sans effet sur les données (le nuage de profondeur, lui, est correct) |
+| Le robot ne bougeait pas au clavier | La chaîne `/cmd_vel` → pont → Gazebo fonctionne (le robot avance de 0,22 m avec une commande envoyée par `ros2 topic pub`) ; `teleop_twist_keyboard` lit les touches dans **son propre terminal**, qui doit être la fenêtre active | Commande et consigne précisées dans le README. **Confirmé le 2026-10-25** : le robot de la simulation de l'étudiant avait été déplacé au clavier jusqu'en (1,00 ; −0,49), à 3,6 m du départ |
+| Panneau « Image profondeur » entièrement noir | 13 % des pixels valent +∞ (au-delà de 8 m) : avec la normalisation automatique de RViz, toute l'image deviendrait noire ; la configuration la désactive (plage fixe 0–8 m) | **Vérifié le 2026-10-25** : « Normalize Range » est bien décoché, « Max Value » = 8, l'image s'affiche (figure ci-dessous). Le noir complet observé une fois au démarrage ne s'est pas reproduit (probablement transitoire) |
+
+![RViz : image de profondeur affichée correctement](../figures/E1_rviz_profondeur.png)
+
+*Panneau « Image profondeur » avec la configuration du projet (plage fixe 0 à 8 m : noir = proche,
+blanc = loin). La cible rouge, toute proche, apparaît presque noire ; le mur derrière, plus loin,
+en gris.*
 
 ## 9. Analyse et discussion
 
@@ -338,9 +344,8 @@ python3 robot_mobile_bringup/scripts/generate_textures.py robot_mobile_bringup/m
 
 - **Acquis** : simulation RGB-D complète et vérifiée ; jeu de données de référence avec vérité
   terrain ; outils réutilisables (contrôle des capteurs, analyse).
-- **Reste** : confirmer le pilotage au clavier ; corriger l'affichage du panneau « Image
-  profondeur » de RViz (§ 8.5). Le contrôle visuel de Gazebo et de la superposition caméra / LiDAR
-  est fait.
+- **Contrôle visuel** fait : Gazebo, superposition caméra / LiDAR, images couleur et profondeur
+  dans RViz, pilotage au clavier (§ 8.5).
 - **Transmis à E2** : le rosbag de référence, la vérité terrain, l'erreur de l'odométrie seule
   (0,23 m / 4,5° sur 16 m), qui sert de **point de comparaison** pour le SLAM.
 - **Pour E5** : configurer la vraie caméra comme la caméra simulée (640 × 480, 15 Hz, profondeur recalée).
