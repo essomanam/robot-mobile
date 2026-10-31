@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<!--
+  Monde E4 : la salle as52_room (carte construite en E2) + deux obstacles NON CARTOGRAPHIÉS.
+    - carton (0,4 x 0,4 x 0,4 m) en (0.0, -1.5), sur le couloir sud : visible par le LiDAR ;
+    - obstacle bas (0,6 x 0,6 x 0,08 m) en (0.0, 1.5), sur le couloir nord : 8 cm de haut,
+      SOUS le plan du LiDAR (13 cm) -> seule la caméra de profondeur peut le voir.
+  Le reste est identique à as52_room.sdf (doit le rester).
+
+  Plan (vue de dessus, x vers la droite, y vers le haut) :
+    départ du robot (-2.5, -1.5) ; pilier A (-1.6, 0.3) ; table (-0.4, -0.2) ;
+    pilier B (0.5, -0.6) ; poubelle (0.8, 0.5) ; cible rouge (1.7, -0.3).
+  Le centre de la salle est encombré, le pourtour (1 m le long des murs) est libre
+  pour la trajectoire de référence.
+-->
+<sdf version="1.8">
+  <world name="as52_room_obstacles">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+
+    <!-- Ombres désactivées : coût de calcul, et elles changent l'aspect des murs selon la position -->
+    <scene>
+      <shadows>false</shadows>
+      <ambient>0.7 0.7 0.7 1</ambient>
+      <background>0.8 0.8 0.8 1</background>
+      <grid>false</grid>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>-0.4 0.3 -0.85</direction>
+    </light>
+
+    <light type="directional" name="fill">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0 0 0 1</specular>
+      <direction>0.4 -0.3 -0.85</direction>
+    </light>
+
+    <!-- Sol : collision seulement (le visuel texturé fait partie de la salle) -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>20 20</size></plane>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <include>
+      <uri>model://as52_room</uri>
+    </include>
+
+    <include>
+      <uri>model://cafe_table</uri>
+      <name>table</name>
+      <pose>-0.4 -0.2 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://first_2015_trash_can</uri>
+      <name>trash_can</name>
+      <pose>0.8 0.5 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://red_target</uri>
+      <pose>1.7 -0.3 0 0 0 0</pose>
+    </include>
+
+    <!-- Obstacles non cartographiés (E4) -->
+    <model name="carton">
+      <static>true</static>
+      <pose>0.0 -1.5 0.2 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.4 0.4 0.4</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.4 0.4 0.4</size></box></geometry>
+          <material><ambient>0.55 0.4 0.2 1</ambient><diffuse>0.55 0.4 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="low_obstacle">
+      <static>true</static>
+      <pose>0.0 1.5 0.04 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.6 0.6 0.08</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.6 0.6 0.08</size></box></geometry>
+          <material><ambient>0.15 0.15 0.5 1</ambient><diffuse>0.15 0.15 0.5 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

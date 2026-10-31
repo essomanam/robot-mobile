@@ -15,6 +15,10 @@ superpose au mieux une trajectoire estimée sur la vérité terrain avant de mes
 **ament / ament_cmake / ament_python** — Système de construction des paquets ROS 2.
 `ament_cmake` sert aux paquets C++ ou de configuration, `ament_python` aux paquets Python.
 
+**Arbre de comportement (behavior tree)** — Façon d'organiser les décisions d'un robot en
+arbre de petites actions (« calculer un chemin », « le suivre », « reculer si bloqué »). Nav2
+s'en sert pour enchaîner planification, suivi et manœuvres de dégagement.
+
 **ArUco (marqueur)** — Carré noir et blanc imprimé, codant un numéro, conçu pour être détecté
 facilement par une caméra. Comme sa taille réelle est connue, on peut calculer sa *position* et
 son *orientation* par rapport à la caméra.
@@ -50,6 +54,11 @@ de coût minimal.
 
 **colcon** — Outil en ligne de commande qui compile tous les paquets d'un *workspace*.
 
+**Collision monitor** — Nœud de sécurité de Nav2, placé juste avant les moteurs : il simule
+le déplacement demandé sur un court instant (1,2 s ici) et ralentit ou arrête le robot si des
+points d'obstacle (LiDAR, profondeur) se trouvent sur son passage. Dernière barrière, il ne
+planifie rien.
+
 **Contour (OpenCV)** — Courbe qui suit le bord d'une zone d'un *masque* binaire. Permet de mesurer
 l'aire et la position d'une zone détectée.
 
@@ -59,6 +68,9 @@ est jugée fiable.
 
 **cv_bridge** — Bibliothèque qui convertit une image ROS (`sensor_msgs/Image`) en tableau
 *OpenCV* et inversement.
+
+**Cycle de vie (nœud à)** — Nœud ROS 2 qui passe par des états (non configuré, inactif, actif) ;
+un *gestionnaire de cycle de vie* les fait démarrer dans l'ordre. Les nœuds de *Nav2* en sont.
 
 **DDS (Data Distribution Service)** — Norme de communication réseau sur laquelle repose ROS 2 pour
 transporter les messages entre programmes et entre machines.
@@ -74,6 +86,13 @@ peut alors corriger toute la trajectoire et la carte accumulées depuis le premi
 
 **Gazebo** — Simulateur physique 3D qui reproduit un robot, ses capteurs et son environnement.
 Version utilisée : Gazebo Jetty.
+
+**Glissement (des roues)** — Les roues tournent sans que le robot avance d'autant (sol
+glissant, robot bloqué contre un obstacle). L'*odométrie* des roues, qui compte leurs tours,
+croit alors que le robot avance : sa position estimée devient fausse.
+
+**Gonflement (inflation)** — Dans une *carte de coûts*, zone de coût décroissant autour de
+chaque obstacle (0,7 m ici), qui pousse le planificateur à passer au large plutôt qu'au ras.
 
 **HSV** — Représentation d'une couleur en Teinte (*Hue*), Saturation et Valeur (luminosité). Plus
 adaptée que RGB pour détecter une couleur, car la teinte varie peu avec l'éclairage.
@@ -99,6 +118,10 @@ un plan. Le TurtleBot3 porte un LDS (LiDAR 2D, 360°).
 condition (ex. : « la couleur est rouge »).
 
 **MCAP** — Format de fichier utilisé pour les *rosbags*, qui permet la compression (zstd).
+
+**MPPI (Model Predictive Path Integral)** — Contrôleur de *Nav2* qui simule des centaines de
+trajectoires possibles à chaque instant et choisit la meilleure (proche du chemin, loin des
+obstacles).
 
 **Mermaid** — Langage texte qui permet de dessiner des schémas dans un fichier Markdown ; GitHub
 les affiche directement.
@@ -134,6 +157,11 @@ le code, généralement depuis un fichier *YAML*.
 
 **Paramètres intrinsèques (calibration)** — Caractéristiques internes d'une caméra : focales
 $f_x, f_y$ et centre optique $(c_x, c_y)$, en pixels. Publiés dans `CameraInfo` (matrice K).
+
+**Planificateur global / contrôleur local** — Les deux étages de Nav2. Le planificateur
+calcule, sur la carte entière, le chemin de plus faible coût jusqu'au but (recalculé chaque
+seconde). Le contrôleur (ici *MPPI*) calcule, plusieurs fois par seconde, les vitesses qui
+suivent ce chemin en tenant compte des obstacles vus à l'instant autour du robot.
 
 **Profondeur (image de)** — Image où chaque pixel contient une distance au lieu d'une couleur.
 
@@ -200,6 +228,9 @@ horodatage. Utilisé sur `/cmd_vel` par le TurtleBot3 sous ROS 2 Lyrical.
 
 **Vérité terrain (ground truth)** — Valeur exacte, connue indépendamment de l'estimation à évaluer
 (en simulation : la vraie position du robot donnée par Gazebo).
+
+**Voxel** — « Pixel en 3D » : petit cube de l'espace (5 cm de côté ici). Réduire un
+*nuage de points* à un point par voxel allège les calculs sans perdre la forme des obstacles.
 
 **Workspace (colcon)** — Dossier qui regroupe des paquets ROS 2 et leurs résultats de compilation
 (`build/`, `install/`, `log/`).

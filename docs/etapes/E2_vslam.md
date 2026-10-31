@@ -3,15 +3,15 @@
 > **Résumé en 3 lignes**
 > 1. Cinq méthodes ont été comparées **sur exactement les mêmes données** (le jeu de référence d'E1) : odométrie seule, trois configurations de RTAB-Map (caméra + roues, caméra seule, caméra + LiDAR + roues) et slam_toolbox (LiDAR).
 > 2. La démarche a permis de **diagnostiquer puis corriger** les défauts de la configuration visuelle : en limitant le recalage visuel aux points à moins de 4 m, l'erreur de RTAB-Map RGB-D a été divisée par 4 et ses contraintes fausses supprimées.
-> 3. Résultat : **RTAB-Map caméra RGB-D + LiDAR + roues** est la plus précise (1 cm en cartographie, 2 cm en localisation sur un nouveau parcours) et est retenue (D-014) ; limite identifiée : sans pose de départ connue, la relocalisation par l'apparence échoue quand les vues diffèrent trop de celles de la carte.
+> 3. Résultat : **RTAB-Map caméra RGB-D + LiDAR + roues** est la plus précise (1 cm en cartographie, 2 cm en localisation sur un nouveau parcours) et est retenue (D-014) ; avec une carte faite **dans les deux sens** (D-015), le robot se relocalise seul en ≈ 9 s, puis reste à 1,6 cm près.
 
 | Champ | Valeur |
 |---|---|
 | Statut | 🟢 terminée |
-| Dates | début 2026-10-25 — fin 2026-10-25 |
+| Dates | 2026-10-25 ; complément D-015 le 2026-10-30 |
 | Exigences couvertes | EX-VSLAM-1 (carte), EX-VSLAM-2 (localisation) — voir [analyse du sujet](../00_analyse_du_sujet.md) |
 | Décisions liées | [D-005](../decisions.md#d-005--rtab-map-comme-outil-de-v-slam-principal), [D-012](../decisions.md#d-012--paquet-robot_mobile_evaluation-pour-les-outils-dexpérience), [D-013](../decisions.md#d-013--protocole-de-comparaison-des-slam), [D-014](../decisions.md#d-014--configuration-slam-retenue-pour-la-suite), [D-015](../decisions.md#d-015--démarrage-de-la-navigation-depuis-une-pose-connue) |
-| Entrées de journal | [2026-10-25](../journal/2026-10-25_E2_vslam.md) |
+| Entrées de journal | [2026-10-25](../journal/2026-10-25_E2_vslam.md), [2026-10-30](../journal/2026-10-30_E2_E3_E4.md) |
 
 ---
 
@@ -300,6 +300,37 @@ relocalisation, l'erreur est de plusieurs mètres (le robot se croit à l'origin
 *Scénario 2 : erreur de position (à gauche) et trajectoire estimée par D une fois localisé
 (à droite), superposée à la vérité terrain.*
 
+### 8.6 Carte construite dans les deux sens (D-015)
+
+Suite à l'échec de la relocalisation globale (§ 8.5), une nouvelle carte a été construite en
+parcourant la salle **dans les deux sens** (tour antihoraire puis tour horaire, 191 s,
+`config/mapping_bidirectional_trajectory.yaml`), directement pendant la simulation
+(`launch/mapping_session.launch.py`, sans enregistrer les images).
+
+| Carte | ATE en ligne | ATE graphe final | Contraintes de boucle > 10 cm |
+|---|---|---|---|
+| Deux sens (configuration D) | 1,1 cm | 0,9 cm | 0 / 478 |
+
+Même test de relocalisation globale que le scénario 1 du § 8.5 (parcours inverse, pose de départ
+**inconnue**), 3 essais :
+
+| Carte utilisée | Relocalisé | Délai | Distance avant | Erreur RMS après | Erreur max après | Temps < 10 cm |
+|---|---|---|---|---|---|---|
+| Un seul sens (§ 8.5) | **0 / 3** | — | — | — | — | — |
+| **Deux sens** | **3 / 3** | 9,4 ± 0,7 s ¹ | 0,6 ± 0,1 m | **1,6 ± 0,3 cm** | 8,5 ± 5,5 cm | 100 % |
+
+¹ dont ≈ 7 s d'immobilité au début de l'enregistrement : le robot se relocalise après environ
+2 s de mouvement.
+
+![Relocalisation avec la carte faite dans les deux sens](../figures/E2_relocalisation_carte_2_sens.png)
+
+*Pose de départ inconnue : l'erreur passe de plusieurs mètres à environ 1 cm dès que le robot
+reconnaît un lieu (≈ 9 s), puis reste sous 10 cm jusqu'au bout.*
+
+Le diagnostic du § 8.5 est confirmé : la relocalisation échouait parce que la carte ne contenait
+pas de vues prises dans le sens du parcours. Avec des vues dans les deux sens, elle devient
+rapide et précise.
+
 ## 9. Analyse et discussion
 
 **Ce qu'apporte le SLAM.** La dérive de l'odométrie (23 cm en fin de tour) disparaît : 0,4 cm
@@ -340,8 +371,9 @@ cartographie. La vision seule (B) a besoin de revoir des vues proches de celles 
 se recaler, et dérive entre-temps. La **relocalisation globale** par l'apparence, elle, échoue
 quand les vues diffèrent trop de celles de la carte. Conséquences pratiques : démarrer la
 navigation depuis une pose connue ([D-015](../decisions.md#d-015--démarrage-de-la-navigation-depuis-une-pose-connue)),
-et, si l'on veut une relocalisation globale robuste, **cartographier dans les deux sens** (ou en
-tournant sur place à intervalles réguliers) pour que la carte contienne des vues variées.
+et **cartographier dans les deux sens** pour que la carte contienne des vues variées : c'est
+l'option retenue par l'étudiant ([D-015](../decisions.md#d-015--démarrage-de-la-navigation-depuis-une-pose-connue)), validée
+par la mesure (§ 8.6 : relocalisation en ≈ 9 s, 3 / 3).
 
 **Limites.** Peu de parcours, dans une petite salle ; un seul essai pour C, E et pour B en localisation ; une
 simulation favorable (éclairage parfait, profondeur peu bruitée, pas de flou) : les performances
@@ -391,7 +423,7 @@ ros2 launch robot_mobile_bringup slam.launch.py method:=rtabmap_rgbd_scan
   deux défauts de configuration diagnostiqués et corrigés ; configuration D retenue pour la suite
   ([D-014](../decisions.md#d-014--configuration-slam-retenue-pour-la-suite)).
 - **Localisation** : sur un parcours inverse, D reste localisé à 2 cm près depuis une pose de
-  départ connue ; la relocalisation globale par l'apparence échoue (limite documentée, D-015).
+  départ connue ; avec une carte faite dans les deux sens, il se relocalise aussi seul (§ 8.6).
 - **Pistes facultatives** : comprendre la perte de suivi de l'odométrie visuelle (réinitialisation
   automatique `Odom/ResetCountdown`, stratégie image à image) ; cartographier dans les deux sens
   pour rendre la relocalisation globale possible ; retirer les damiers identiques des textures
@@ -406,4 +438,5 @@ ros2 launch robot_mobile_bringup slam.launch.py method:=rtabmap_rgbd_scan
 3. La meilleure configuration combine **caméra RGB-D, LiDAR et roues** (1 cm d'erreur) : le LiDAR apporte la précision locale, la vision la reconnaissance de lieux.
 4. Un défaut a été **diagnostiqué par la mesure** (contraintes de boucle fausses mais « sûres ») et corrigé : erreur divisée par 4, calcul 3 fois plus rapide.
 5. La vision seule est précise mais **fragile** (perte de suivi reproductible) : la fusion de capteurs est nécessaire.
-6. En **localisation** sur un parcours inverse, la configuration retenue reste à **2 cm** près depuis une pose connue ; sans pose connue, la reconnaissance de lieux échoue car les vues sont trop différentes de la carte : il faudra démarrer d'une pose connue ou cartographier dans les deux sens.
+6. En **localisation** sur un parcours inverse, la configuration retenue reste à **2 cm** près depuis une pose connue ; sans pose connue, la reconnaissance de lieux échouait car la carte ne contenait que des vues dans un sens.
+7. **Carte faite dans les deux sens** : le robot se relocalise seul en ≈ 9 s (3 / 3), puis reste à 1,6 cm près — diagnostic confirmé par la mesure.

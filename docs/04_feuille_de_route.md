@@ -31,8 +31,8 @@ carte), puis s'appuyer sur E2 pour la navigation vers des buts dans la carte.
 | E0 | Dépôt, documentation, analyse du sujet, feuille de route | LIV-1 (début) | 🟢 terminée |
 | E1 | Robot RGB-D simulé dans une scène statique, données capteurs mesurées et enregistrées | EX-SIM-1, EX-SIM-2 | 🟢 terminée |
 | E2 | Carte et localisation par RTAB-Map, évaluées par rapport à la vérité terrain | EX-VSLAM-1, EX-VSLAM-2 | 🟢 terminée |
-| E3 | Détection visuelle reliée aux commandes de déplacement | EX-VIS-1, EX-VIS-2, EX-TR | ⚪ à faire |
-| E4 | Obstacles non cartographiés détectés par la profondeur et évités | EX-EVIT-1, EX-EVIT-2 | ⚪ à faire |
+| E3 | Détection visuelle reliée aux commandes de déplacement | EX-VIS-1, EX-VIS-2, EX-TR | 🟢 terminée |
+| E4 | Obstacles non cartographiés détectés par la profondeur et évités | EX-EVIT-1, EX-EVIT-2 | 🟢 terminée |
 | E5 | Portage sur le robot réel et analyse des écarts | EX-HW-1, EX-HW-2 | ⚪ à faire |
 | E6 | Rapport technique et démonstration | LIV-2, LIV-3 | ⚪ à faire |
 
@@ -116,9 +116,9 @@ l'[analyse du sujet](00_analyse_du_sujet.md#5-questions-ouvertes-pour-le-supervi
 | Jalon | Contenu | Date |
 |---|---|---|
 | J1 | Feuille de route validée | ✅ 2026-10-24 |
-| J2 | Fin E1 : simulation RGB-D opérationnelle | à fixer |
-| J3 | Fin E2 : carte et localisation évaluées | à fixer |
-| J4 | Fin E3 + E4 : navigation visuelle et évitement en simulation | à fixer |
+| J2 | Fin E1 : simulation RGB-D opérationnelle | ✅ 2026-10-25 |
+| J3 | Fin E2 : carte et localisation évaluées | ✅ 2026-10-25 (complément D-015 le 2026-10-30) |
+| J4 | Fin E3 + E4 : navigation visuelle et évitement en simulation | ✅ 2026-10-30 (présentation le 2026-11-02) |
 | J5 | Fin E5 : essais sur le robot réel | à fixer |
 | J6 | Rendu du rapport et démonstration | à fixer |
 

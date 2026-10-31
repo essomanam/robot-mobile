@@ -18,8 +18,8 @@ grâce à la profondeur. Le travail est développé en simulation (Gazebo) puis 
 | E0 | Fondations : dépôt, documentation, analyse, feuille de route | 🟢 terminée |
 | E1 | Simulation Gazebo et acquisition des données capteurs | 🟢 terminée |
 | E2 | Cartographie et localisation visuelle (V-SLAM, RTAB-Map) | 🟢 terminée |
-| E3 | Navigation guidée par la vision | ⚪ à faire |
-| E4 | Perception de la profondeur et évitement d'obstacles | ⚪ à faire |
+| E3 | Navigation guidée par la vision | 🟢 terminée |
+| E4 | Perception de la profondeur et évitement d'obstacles | 🟢 terminée |
 | E5 | Validation sur le robot réel | ⚪ à faire |
 | E6 | Rapport technique et démonstration | ⚪ à faire |
 
@@ -36,18 +36,19 @@ robot-mobile/
 │   ├── urdf/                     description pour ROS (TF, RViz)
 │   └── models/robot_mobile/      modèle pour Gazebo (physique, capteurs)
 ├── robot_mobile_bringup/         lancement et configuration
-│   ├── launch/                   simulation, jeu de données, SLAM, évaluation des SLAM
-│   ├── config/                   pont Gazebo ↔ ROS 2, trajectoire de référence, slam/
-│   ├── worlds/, models/          salle as52_room, cible rouge
+│   ├── launch/                   simulation, jeu de données, SLAM, approche de la cible, navigation, essais
+│   ├── config/                   pont Gazebo ↔ ROS 2, trajectoires, slam/, perception/, control/, navigation/
+│   ├── worlds/, models/          salle as52_room (et variante avec obstacles), cible rouge
 │   ├── rviz/                     configuration d'affichage
-│   └── scripts/                  génération des textures, comparaison des SLAM
+│   └── scripts/                  textures, séries d'essais mesurés (SLAM, cible, navigation)
+├── robot_mobile_perception/      détection de la cible (couleur + profondeur) et tests
+├── robot_mobile_control/         comportement d'approche (machine à états) et tests
 └── robot_mobile_evaluation/      outils d'expérience (Python) et tests
-    ├── robot_mobile_evaluation/  contrôle des capteurs, trajectoire, enregistrement, métriques
-    └── test/                     tests des métriques (ATE, RPE) et du style
+    ├── robot_mobile_evaluation/  contrôle des capteurs, trajectoires, métriques, suivi des essais
+    └── test/                     tests des métriques (ATE, RPE, marges) et du style
 ```
 
-Les paquets `robot_mobile_perception` et `robot_mobile_control` seront créés à l'étape E3
-(voir l'[architecture cible](docs/03_architecture_cible.md#5-organisation-proposée-du-dépôt)).
+Organisation détaillée : [architecture](docs/03_architecture_cible.md#5-organisation-proposée-du-dépôt).
 
 ## Environnement requis
 
@@ -169,7 +170,33 @@ ros2 run robot_mobile_evaluation evaluate_localization ~/as52_data/slam_runs/loc
 
 Si une simulation est déjà ouverte, isoler l'enregistrement : `ROS_DOMAIN_ID=43 GZ_PARTITION=eval ros2 launch ...`.
 
-*Les scénarios des étapes suivantes (navigation visuelle, évitement) seront ajoutés ici.*
+### Navigation guidée par la vision (étape E3)
+
+Simulation lancée, le robot cherche la cible rouge, s'aligne, s'en approche et s'arrête à 0,6 m :
+
+```bash
+ros2 launch robot_mobile_bringup target_approach.launch.py
+ros2 run rqt_image_view rqt_image_view /target/debug_image     # ce que voit le détecteur
+robot_mobile_bringup/scripts/run_target_trials.sh ~/as52_data/target_trials/E3   # 6 scénarios mesurés
+robot_mobile_bringup/scripts/run_perception_check.sh ~/as52_data/perception/E3   # détection seule
+```
+
+### Navigation avec évitement d'obstacles (étape E4)
+
+Monde avec des obstacles absents de la carte, localisation RTAB-Map (carte faite dans les deux
+sens), Nav2 avec le LiDAR et la caméra de profondeur :
+
+```bash
+ros2 launch robot_mobile_bringup simulation.launch.py \
+    world:=$PWD/install/robot_mobile_bringup/share/robot_mobile_bringup/worlds/as52_room_obstacles.sdf
+ros2 launch robot_mobile_bringup navigation.launch.py map_database:=<carte>.db rviz:=true
+# puis « 2D Goal Pose » dans RViz ; use_depth:=false pour le LiDAR seul
+robot_mobile_bringup/scripts/run_navigation_trials.sh ~/as52_data/nav_trials/E4 <carte>.db   # essais mesurés
+robot_mobile_bringup/scripts/run_costmap_snapshots.sh ~/as52_data/nav_trials/E4_costmap <carte>.db
+```
+
+Construire la carte (deux sens, ≈ 4 min, sans fenêtre) :
+`ros2 launch robot_mobile_bringup mapping_session.launch.py output:=~/as52_data/maps/carte`.
 
 ## Auteur
 

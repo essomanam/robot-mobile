@@ -1,0 +1,20 @@
+# Approche de la cible rouge par asservissement visuel (E3).
+target_follower:
+  ros__parameters:
+    use_sim_time: true
+    class_id: red_target
+    base_frame: base_footprint
+    desired_distance: 0.6      # m : du centre du robot à la face de la cible (≈ 0,5 m d'écart à l'avant)
+    distance_tolerance: 0.02   # m : l'arrêt a lieu à l'entrée de la tolérance (écart final ≈ tolérance)
+    align_angle_deg: 20.0      # au-delà : rotation sur place ; en deçà : rotation + avance
+    arrive_angle_deg: 5.0      # cible considérée centrée à l'arrivée
+    k_v: 0.5                   # (m/s)/m
+    k_w: 1.2                   # (rad/s)/rad
+    max_v: 0.2                 # m/s (Waffle réel : 0,26)
+    max_w: 0.8                 # rad/s (Waffle réel : 1,82)
+    search_w: 0.5              # rad/s : rotation de recherche
+    lost_timeout: 1.0          # s sans voir la cible avant de rechercher
+    safety_distance: 0.30      # m : obstacle LiDAR plus proche devant -> plus d'avance
+    safety_angle_deg: 30.0     # demi-largeur du secteur avant surveillé
+    sensor_timeout: 0.5        # s : détections ou scan plus anciens -> arrêt
+    rate_hz: 20.0

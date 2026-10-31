@@ -1,0 +1,12 @@
+# Détection de la cible rouge (E3). Échelle de teinte OpenCV : 0-179.
+target_detector:
+  ros__parameters:
+    use_sim_time: true
+    class_id: red_target
+    hue_ranges: [0, 10, 170, 179]   # le rouge est aux deux extrémités de l'échelle de teinte
+    saturation_min: 100             # écarte les couleurs pâles (gris, rose clair)
+    value_min: 60                   # écarte les pixels trop sombres ; la face à l'ombre de la
+                                    # cible simulée descend vers V ≈ 100, on garde une marge
+    kernel_size: 5                  # pixels : nettoyage morphologique (ouverture + fermeture)
+    min_area_px: 150                # pixels : plus petite zone acceptée (≈ cible à 6 m)
+    max_depth: 8.0                  # m : portée de la caméra de profondeur simulée

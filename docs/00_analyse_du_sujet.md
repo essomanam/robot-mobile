@@ -55,10 +55,10 @@ le sujet a été traité.
 | EX-SIM-2 | Les données des capteurs (caméra RGB-D, LiDAR, odométrie, IMU) sont acquises dans ROS 2 | Axe 1 | Topics publiés, fréquences et résolutions mesurées, enregistrement rosbag rejouable | E1 | [E1 § 8](etapes/E1_simulation.md#8-résultats) |
 | EX-VSLAM-1 | Une carte de l'environnement est construite par SLAM visuel | Axe 2 | Carte sauvegardée et rechargeable, cohérente avec le monde simulé | E2 | [E2 § 8.1, 8.4](etapes/E2_vslam.md#84-figures-de-la-cartographie), rechargée en § 8.5 |
 | EX-VSLAM-2 | Le robot est localisé dans cette carte | Axe 2 | Erreur de trajectoire (ATE/RPE) mesurée par rapport à la vérité terrain du simulateur | E2 | [E2 § 8.1](etapes/E2_vslam.md#81-comparaison-des-méthodes-configuration-finale) et [§ 8.5](etapes/E2_vslam.md#85-localisation-dans-la-carte-partie-2) |
-| EX-VIS-1 | Un traitement d'image extrait une information utile à la navigation (cible, ligne ou marqueur) | Axe 3 | Taux de détection et fréquence de traitement mesurés | E3 | — |
-| EX-VIS-2 | Cette information pilote les déplacements du robot | Axe 3 | Taux de succès d'atteinte de la cible, temps, erreur de position finale sur N essais | E3 | — |
-| EX-EVIT-1 | Les obstacles absents de la carte sont détectés à partir de la profondeur | Axe 4 | Obstacle ajouté après la cartographie détecté dans la carte de coûts / la perception | E4 | — |
-| EX-EVIT-2 | Le robot les évite dynamiquement | Axe 4 | Aucune collision sur N essais ; distance minimale aux obstacles mesurée | E4 | — |
+| EX-VIS-1 | Un traitement d'image extrait une information utile à la navigation (cible, ligne ou marqueur) | Axe 3 | Taux de détection et fréquence de traitement mesurés | E3 | [E3 § 8.1](etapes/E3_navigation_vision.md#81-détection) (100 % en vue, 0 % hors du champ, 14 Hz) |
+| EX-VIS-2 | Cette information pilote les déplacements du robot | Axe 3 | Taux de succès d'atteinte de la cible, temps, erreur de position finale sur N essais | E3 | [E3 § 8.2](etapes/E3_navigation_vision.md#82-approche-de-la-cible) (5 / 5 à vue dégagée, 2,7 cm) |
+| EX-EVIT-1 | Les obstacles absents de la carte sont détectés à partir de la profondeur | Axe 4 | Obstacle ajouté après la cartographie détecté dans la carte de coûts / la perception | E4 | [E4 § 8.1](etapes/E4_evitement.md#81-lobstacle-bas-dans-la-carte-de-coûts) |
+| EX-EVIT-2 | Le robot les évite dynamiquement | Axe 4 | Aucune collision sur N essais ; distance minimale aux obstacles mesurée | E4 | [E4 § 8.2](etapes/E4_evitement.md#82-essais-de-navigation) (4 / 4 sans contact avec la profondeur) |
 | EX-HW-1 | Les développements tournent sur le robot physique | Axe 5 | Mêmes scénarios rejoués sur le robot réel | E5 | — |
 | EX-HW-2 | Les écarts simulation / réalité sont analysés | Axe 5 | Comparaison chiffrée sim vs réel et explication des écarts | E5 | — |
 
@@ -66,9 +66,9 @@ le sujet a été traité.
 
 | ID | Exigence | Critère de vérification proposé | Preuve |
 |---|---|---|---|
-| EX-TR | Les flux capteurs sont traités **en temps réel** | La boucle perception → commande tient sa fréquence cible (ordre de grandeur : ≥ 10 Hz) ; latence mesurée | — |
-| EX-PERC | La navigation repose **principalement sur la perception visuelle** (RGB-D), le LiDAR étant complémentaire | Pour chaque fonction, le capteur utilisé est justifié dans la fiche d'étape | — |
-| EX-ROS | La solution est construite sur la pile standard ROS 2 | Paquets ROS 2, fichiers launch, paramètres YAML | — |
+| EX-TR | Les flux capteurs sont traités **en temps réel** | La boucle perception → commande tient sa fréquence cible (ordre de grandeur : ≥ 10 Hz) ; latence mesurée | [E3 § 8.1](etapes/E3_navigation_vision.md#81-détection) (détection à 14 Hz, latence ≈ 30 ms) |
+| EX-PERC | La navigation repose **principalement sur la perception visuelle** (RGB-D), le LiDAR étant complémentaire | Pour chaque fonction, le capteur utilisé est justifié dans la fiche d'étape | [E2 § 4](etapes/E2_vslam.md#4-choix-techniques-et-justification) (localisation), [E3 § 4](etapes/E3_navigation_vision.md#4-choix-techniques-et-justification) (cible), [E4 § 9](etapes/E4_evitement.md#9-analyse-et-discussion) (obstacles : profondeur indispensable) |
+| EX-ROS | La solution est construite sur la pile standard ROS 2 | Paquets ROS 2, fichiers launch, paramètres YAML | 5 paquets ROS 2 ([README](../README.md#structure-du-dépôt)) ; Nav2, RTAB-Map, `vision_msgs` |
 
 ### 3.3 Livrables
 

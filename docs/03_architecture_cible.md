@@ -86,7 +86,9 @@ convention des pilotes de caméras réelles.
 | `/ground_truth/odom` | `nav_msgs/Odometry` | simulateur (vérité terrain) | évaluation uniquement |
 | `/map` | `nav_msgs/OccupancyGrid` | RTAB-Map | Nav2 |
 | `/tf`, `/tf_static` | `tf2_msgs/TFMessage` | plusieurs | tous |
-| détections (nom à fixer) | `vision_msgs/Detection2DArray` (proposé) | détecteur | comportement |
+| `/target/detections` | `vision_msgs/Detection3DArray` (position 3D, repère optique ; vide si rien n'est vu) | détecteur (E3) | comportement |
+| `/target/debug_image` | `sensor_msgs/Image` | détecteur | visualisation |
+| `/camera/points` | `sensor_msgs/PointCloud2` (profondeur → nuage) | `point_cloud_xyz` (E4) | cartes de coûts Nav2, collision monitor |
 | `/cmd_vel` | `geometry_msgs/TwistStamped` | sécurité | robot |
 
 ## 4. Arbre des repères (TF)
@@ -122,8 +124,8 @@ flowchart TD
 ## 5. Organisation proposée du dépôt
 
 Décision [D-006](decisions.md#d-006--dépôt-organisé-en-plusieurs-paquets), appliquée à l'étape E1, complétée en E2 par
-[D-012](decisions.md#d-012--paquet-robot_mobile_evaluation-pour-les-outils-dexpérience) (paquet d'évaluation). Les paquets
-`perception` et `control` seront créés à l'étape E3.
+[D-012](decisions.md#d-012--paquet-robot_mobile_evaluation-pour-les-outils-dexpérience) (paquet d'évaluation) ; les paquets
+`perception` et `control` existent depuis l'étape E3 ([D-016](decisions.md#d-016--architecture-de-la-navigation-guidée-par-la-vision)).
 
 ```
 robot-mobile/                    dépôt Git
@@ -164,8 +166,7 @@ pas de `package.xml`, est ignoré à la compilation.
 
 ## 7. Questions encore ouvertes
 
-- Le message de détection : `vision_msgs/Detection2DArray` (position dans l'image) ou position 3D
-  calculée avec la profondeur ? À trancher à l'étape E3.
+- ~~Le message de détection~~ : tranché en E3, `vision_msgs/Detection3DArray` (position 3D).
 - Le robot du labo aura-t-il une caméra RGB-D ([D-004](decisions.md#d-004--hypothèse-sur-le-robot-du-laboratoire)) ?
   Si non, la profondeur viendra du LiDAR et le SLAM visuel deviendra monoculaire ou mixte.
 - Fusion de l'odométrie des roues et de l'IMU (`robot_localization`) : utile ou non ? À mesurer à l'étape E2.

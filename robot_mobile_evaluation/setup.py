@@ -25,6 +25,12 @@ setup(
             'trajectory_logger = robot_mobile_evaluation.trajectory_logger:main',
             'evaluate_slam = robot_mobile_evaluation.evaluate_slam:main',
             'evaluate_localization = robot_mobile_evaluation.evaluate_localization:main',
+            'perception_check = robot_mobile_evaluation.perception_check:main',
+            'trial_monitor = robot_mobile_evaluation.trial_monitor:main',
+            'evaluate_target_trials = robot_mobile_evaluation.evaluate_target_trials:main',
+            'navigation_trial = robot_mobile_evaluation.navigation_trial:main',
+            'evaluate_navigation_trials = robot_mobile_evaluation.evaluate_navigation_trials:main',
+            'costmap_snapshot = robot_mobile_evaluation.costmap_snapshot:main',
         ],
     },
 )

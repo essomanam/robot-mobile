@@ -21,8 +21,13 @@
   <exec_depend>rtabmap_slam</exec_depend>
   <exec_depend>rtabmap_odom</exec_depend>
   <exec_depend>slam_toolbox</exec_depend>
+  <exec_depend>rtabmap_util</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
   <!-- trajectoire de référence et enregistrement des essais -->
   <exec_depend>robot_mobile_evaluation</exec_depend>
+  <!-- navigation guidée par la vision (E3) -->
+  <exec_depend>robot_mobile_perception</exec_depend>
+  <exec_depend>robot_mobile_control</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_cmake_xmllint</test_depend>

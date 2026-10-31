@@ -39,7 +39,9 @@
 | [D-012](#d-012--paquet-robot_mobile_evaluation-pour-les-outils-dexpérience) | Paquet `robot_mobile_evaluation` pour les outils d'expérience | acceptée | 2026-10-25 |
 | [D-013](#d-013--protocole-de-comparaison-des-slam) | Protocole de comparaison des SLAM | acceptée | 2026-10-25 |
 | [D-014](#d-014--configuration-slam-retenue-pour-la-suite) | Configuration SLAM retenue pour la suite | acceptée | 2026-10-25 |
-| [D-015](#d-015--démarrage-de-la-navigation-depuis-une-pose-connue) | Démarrage de la navigation depuis une pose connue | proposée | 2026-10-25 |
+| [D-015](#d-015--démarrage-de-la-navigation-depuis-une-pose-connue) | Démarrage de la navigation depuis une pose connue | remplacée : option (b) retenue | 2026-10-30 |
+| [D-016](#d-016--architecture-de-la-navigation-guidée-par-la-vision) | Architecture de la navigation guidée par la vision | acceptée | 2026-10-30 |
+| [D-017](#d-017--navigation-avec-obstacles-non-cartographiés) | Navigation avec obstacles non cartographiés | acceptée | 2026-10-30 |
 
 ---
 
@@ -222,10 +224,36 @@
 
 | Date | Statut | Étape |
 |---|---|---|
-| 2026-10-25 | proposée — à valider par l'étudiant | E3, E4, E5 |
+| 2026-10-25 → 2026-10-30 | **option (b) retenue par l'étudiant** le 2026-10-30 (voir ci-dessous) | E3, E4, E5 |
 
 - **Contexte** : en localisation sur un parcours inverse ([fiche E2 § 8.5](etapes/E2_vslam.md#85-localisation-dans-la-carte-partie-2)), la configuration D reste localisée à 2 cm près depuis une pose de départ connue, mais **ne se relocalise jamais** quand la pose de départ est inconnue (vues trop différentes de celles de la carte).
 - **Options** : (a) démarrer depuis une pose connue (point de départ fixe, ou pose donnée par l'opérateur dans RViz, « 2D Pose Estimate ») ; (b) rendre la relocalisation globale robuste en cartographiant dans les deux sens ; (c) les deux.
 - **Décision proposée** : (a) pour les étapes E3 et E4 (simple, mesuré) ; (b) gardée comme amélioration si le temps le permet ou si la démonstration l'exige.
 - **Justification** : c'est la situation normale d'un robot qui démarre à sa base ; le résultat mesuré dans ce cas est excellent (2 cm, 100 % du temps sous 10 cm).
 - **Conséquences** : les launch de navigation devront accepter une pose de départ (`initial_pose`) ou s'appuyer sur `/initialpose` (RViz) ; le scénario de démonstration (E6) partira d'un point de départ connu.
+- **Décision finale (2026-10-30)** : l'étudiant retient l'option **(b)** : construire la carte en parcourant la salle **dans les deux sens**, pour que la relocalisation globale par l'apparence devienne possible. L'option (a) (pose de départ connue, déjà mesurée à 2 cm) reste le repli si la relocalisation échoue encore.
+- **Vérification (2026-10-30)** : avec la carte faite dans les deux sens, relocalisation globale réussie 3 fois sur 3 en ≈ 9 s, puis 1,6 cm d'erreur RMS ([E2 § 8.6](etapes/E2_vslam.md#86-carte-construite-dans-les-deux-sens-d-015)).
+
+### D-016 — Architecture de la navigation guidée par la vision
+
+| Date | Statut | Étape |
+|---|---|---|
+| 2026-10-30 | acceptée | E3 |
+
+- **Contexte** : le prototype de `dev_ws` détectait la cible dans le nœud de commande, mesurait la distance au LiDAR et tournait puis avançait ([état des lieux](02_etat_des_lieux.md#34-target_followerpy--suivi-de-la-cible)).
+- **Décision** : deux paquets et deux nœuds : `robot_mobile_perception/target_detector` (couleur HSV + profondeur → position 3D, message `vision_msgs/Detection3DArray` publié à chaque image, vide si rien n'est vu) et `robot_mobile_control/target_follower` (machine à états recherche / alignement / approche / arrivée, rotation et avance simultanées, sécurité LiDAR). Calculs écrits en modules sans ROS, testés.
+- **Justification** : séparation perception / commande (architecture du projet) ; message standard réutilisable par Nav2 ou d'autres comportements ; absence de cible explicite ; distance mesurée sur la cible elle-même.
+- **Conséquences** : 12 tests unitaires ; la détection d'une autre cible (marqueur) ne demandera qu'un nouveau détecteur publiant le même message.
+
+### D-017 — Navigation avec obstacles non cartographiés
+
+| Date | Statut | Étape |
+|---|---|---|
+| 2026-10-30 | acceptée | E4 |
+
+- **Contexte** : le sujet demande d'utiliser la profondeur pour détecter les obstacles absents de la carte et les éviter ; E3 a montré qu'une approche directe se bloque devant un obstacle.
+- **Options** : (a) un évitement réactif écrit pour le projet ; (b) Nav2 (planification + contrôle MPPI + cartes de coûts) alimenté par le LiDAR et la caméra de profondeur.
+- **Décision** : (b) Nav2 avec ses réglages par défaut pour le TurtleBot3, localisé par RTAB-Map (carte E2 faite dans les deux sens) ; la profondeur, convertie en nuage de points (`rtabmap_util/point_cloud_xyz`), est une source d'obstacles des cartes de coûts et du *collision monitor* entre 3 et 40 cm de hauteur.
+- **Justification** : pile standard, éprouvée et maintenue ; seule la source d'obstacles « profondeur » est spécifique au projet, ce qui permet de mesurer exactement son apport (même configuration avec et sans elle).
+- **Conséquences** : lancement d'un gestionnaire de cycle de vie propre au projet (absent de `navigation_launch.py` sous Lyrical) ; comparaison « LiDAR seul » vs « LiDAR + profondeur » sur un obstacle visible du LiDAR et un obstacle trop bas pour lui ([fiche E4](etapes/E4_evitement.md)).
+- **Vérification (2026-10-30)** : avec la profondeur, 4 essais sur 4 réussis sans contact ; avec le LiDAR seul, 2 contacts sur 2 avec l'obstacle bas et un faux « but atteint » à 2,87 m du but ([E4 § 8 et 9](etapes/E4_evitement.md#8-résultats)).

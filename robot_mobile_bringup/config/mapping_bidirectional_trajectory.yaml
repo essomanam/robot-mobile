@@ -1,0 +1,27 @@
+# Trajectoire de cartographie dans les deux sens (D-015, option b).
+#
+# But : que la carte contienne des vues de chaque lieu dans les DEUX directions, pour que la
+# relocalisation par l'apparence fonctionne quel que soit le sens de passage (en E2, la carte
+# faite dans un seul sens ne permettait pas de se relocaliser sur un parcours inverse).
+#
+# Départ : (-2.5, -1.5) face à +x (départ par défaut de la simulation), à 1 m des murs.
+#   1. tour dans le sens trigonométrique (identique au parcours de référence E1)
+#   2. quart de tour à gauche pour faire face au nord
+#   3. tour dans le sens horaire sur le même rectangle, retour au départ (face à l'ouest)
+#
+# Durée : 95,7 + 3,9 + 91,8 = 191,4 s (+ 5 s d'attente au départ).
+reference_trajectory:
+  ros__parameters:
+    use_sim_time: true
+    start_delay: 5.0
+    rate_hz: 20.0
+    # segments 1 à 8 : sens trigonométrique ; 9 : face au nord ; 10 à 16 : sens horaire
+    linear_speeds:  [0.2, 0.0,   0.2,  0.0,   0.2,  0.0,   0.2,  0.0,
+                     0.0,
+                     0.2, 0.0,    0.2,  0.0,    0.2,  0.0,    0.2]
+    angular_speeds: [0.0, 0.4,   0.0,  0.4,   0.0,  0.4,   0.0,  0.4,
+                     0.4,
+                     0.0, -0.4,   0.0,  -0.4,   0.0,  -0.4,   0.0]
+    durations:      [25.0, 3.927, 15.0, 3.927, 25.0, 3.927, 15.0, 3.927,
+                     3.927,
+                     15.0, 3.927, 25.0, 3.927, 15.0, 3.927, 25.0]

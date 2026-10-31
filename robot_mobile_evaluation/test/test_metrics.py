@@ -9,7 +9,8 @@ import math
 import numpy as np
 import pytest
 
-from robot_mobile_evaluation.room import ray_to_wall
+from robot_mobile_evaluation.room import (clearance, distance_to_box, ray_to_wall,
+                                          sight_distance_to_box)
 from robot_mobile_evaluation.trajectory import (align_first_pose, align_umeyama, ate_rmse,
                                                 read_tum, rpe, transform, write_tum)
 
@@ -81,3 +82,24 @@ def test_tum_roundtrip(tmp_path):
     back = read_tum(tmp_path / 'traj.tum')
     assert np.allclose(back[:, :3], truth[:, :3], atol=1e-6)
     assert np.allclose(np.cos(back[:, 3] - truth[:, 3]), 1.0, atol=1e-9)
+
+
+def test_distance_to_box_and_clearance():
+    assert distance_to_box(0.0, 0.0, 2.0, 0.0, 0.5, 0.5) == pytest.approx(1.5)
+    assert distance_to_box(2.1, 0.1, 2.0, 0.0, 0.5, 0.5) == 0.0           # à l'intérieur
+    assert distance_to_box(3.0, 1.0, 2.0, 0.0, 0.5, 0.5) == pytest.approx(math.hypot(0.5, 0.5))
+    # au départ par défaut, l'obstacle le plus proche est le mur sud (1,0 m) ou ouest (1,0 m)
+    assert clearance(-2.5, -1.5) == pytest.approx(1.0)
+    # devant la cible rouge (exclue par défaut), l'obstacle le plus proche est le pilier B,
+    # centré en (0,5 ; -0,6), demi-côté 0,15 : écarts 0,35 m en x et 0,15 m en y
+    assert clearance(1.0, -0.3) == pytest.approx(math.hypot(0.35, 0.15))
+
+
+def test_sight_distance_to_box():
+    # en face : identique à la distance au point le plus proche
+    assert sight_distance_to_box(0.0, 0.0, 2.0, 0.0, 0.2, 0.2) == pytest.approx(1.8)
+    # en biais à 45° vers le centre d'un carré : on entre par le coin, à d * (1 - h / dx)
+    d = math.hypot(2.0, 2.0)
+    expected = d * (1 - 0.2 / 2.0)
+    assert sight_distance_to_box(0.0, 0.0, 2.0, 2.0, 0.2, 0.2) == pytest.approx(expected)
+    assert sight_distance_to_box(2.0, 0.1, 2.0, 0.0, 0.2, 0.2) == 0.0      # à l'intérieur
