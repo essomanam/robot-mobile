@@ -79,7 +79,7 @@ class TargetFollower(Node):
                     self.base_frame, msg.header.frame_id, msg.header.stamp,
                     timeout=Duration(seconds=0.1))
             except TransformException as exc:
-                self.get_logger().warn(f'TF indisponible : {exc}', throttle_duration_sec=2.0)
+                self.get_logger().warning(f'TF indisponible : {exc}', throttle_duration_sec=2.0)
                 return
             p = do_transform_point(point, tf).point
             self.target = (math.atan2(p.y, p.x), math.hypot(p.x, p.y))

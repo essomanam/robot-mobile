@@ -11,6 +11,9 @@
 #      Sans le nœud qui produit /camera/points (use_depth:=false), Nav2 n'utilise que le LiDAR.
 #   5. filtres de zones interdites et de vitesse (keepout, speed) retirés des cartes de coûts :
 #      non utilisés dans ce projet (ils attendaient un masque qui n'est jamais publié).
+#   6. bt_navigator, wait_for_service_timeout : 1000 -> 5000 ms. Machine chargée (simulation + SLAM),
+#      le service is_path_valid du planificateur n'était parfois pas prêt à temps : bt_navigator se
+#      désactivait et refusait tous les buts (constaté en E4 et à l'exploration, 2026-11-17).
 # La localisation n'est pas faite par Nav2 (pas d'AMCL) : RTAB-Map fournit /map et map -> odom.
 
 amcl:
@@ -63,7 +66,7 @@ bt_navigator:
     filter_duration: 0.3
     default_server_timeout: 20
     default_cancel_timeout: 50
-    wait_for_service_timeout: 1000
+    wait_for_service_timeout: 5000   # ms (1000 par défaut), voir la modification 6
     introspection_mode: disabled
     navigators:
     - navigate_to_pose
