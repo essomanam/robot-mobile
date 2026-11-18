@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<!--
+  Maison TurtleBot3 (ROBOTIS) : 15 x 10,5 m, plusieurs pièces, couloirs, meubles, murs de briques.
+  Monde inconnu du robot pour l'exploration autonome. Seul le modèle turtlebot3_house est repris de
+  turtlebot3_gazebo ; physique, capteurs, éclairage et sol sont ceux de as52_room.sdf (le monde
+  d'origine téléchargeait le sol et le soleil sur Internet).
+  La maison a la forme d'un U ouvert au sud sur une cour : le départ de turtlebot3_house.launch.py,
+  (-2.0 ; -0.5), est DANS CETTE COUR, dehors, et le sol s'étend sur 40 m. Une clôture de 1 m de haut
+  ferme donc la maison et sa cour (rectangle x de -7,9 à 7,9 m, y de -5,6 à 5,6 m) : l'exploration a
+  une fin. Départ du robot : (-2.0 ; 1.0), dans la grande pièce centrale (la table est en
+  (-2,7 ; 2,4)).
+-->
+<sdf version="1.8">
+  <world name="tb3_house">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+
+    <!-- Ombres désactivées : coût de calcul, et elles changent l'aspect des murs selon la position -->
+    <scene>
+      <shadows>false</shadows>
+      <ambient>0.7 0.7 0.7 1</ambient>
+      <background>0.8 0.8 0.8 1</background>
+      <grid>false</grid>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>-0.4 0.3 -0.85</direction>
+    </light>
+
+    <light type="directional" name="fill">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0 0 0 1</specular>
+      <direction>0.4 -0.3 -0.85</direction>
+    </light>
+
+    <!-- Sol : plan gris, collision et visuel -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>40 40</size></plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>40 40</size></plane>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Clôture autour de la maison et de sa cour : l'environnement à explorer est fini -->
+    <model name="cloture">
+      <static>true</static>
+      <link name="sud">
+        <pose>0 -5.6 0.5 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>16.0 0.1 1.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>16.0 0.1 1.0</size></box></geometry>
+          <material><ambient>0.55 0.4 0.25 1</ambient><diffuse>0.55 0.4 0.25 1</diffuse></material>
+        </visual>
+      </link>
+      <link name="nord">
+        <pose>0 5.6 0.5 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>16.0 0.1 1.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>16.0 0.1 1.0</size></box></geometry>
+          <material><ambient>0.55 0.4 0.25 1</ambient><diffuse>0.55 0.4 0.25 1</diffuse></material>
+        </visual>
+      </link>
+      <link name="ouest">
+        <pose>-7.95 0 0.5 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.1 11.3 1.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 11.3 1.0</size></box></geometry>
+          <material><ambient>0.55 0.4 0.25 1</ambient><diffuse>0.55 0.4 0.25 1</diffuse></material>
+        </visual>
+      </link>
+      <link name="est">
+        <pose>7.95 0 0.5 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.1 11.3 1.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 11.3 1.0</size></box></geometry>
+          <material><ambient>0.55 0.4 0.25 1</ambient><diffuse>0.55 0.4 0.25 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="turtlebot3_house">
+      <static>true</static>
+      <include>
+        <uri>model://turtlebot3_house</uri>
+      </include>
+    </model>
+
+  </world>
+</sdf>

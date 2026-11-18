@@ -14,12 +14,14 @@ setup(
     zip_safe=True,
     maintainer='essomanam',
     maintainer_email='manganmanasamuel@gmail.com',
-    description='Comportements du projet AS52 : approche de cible par asservissement visuel.',
+    description='Comportements du projet AS52 : approche de cible par asservissement visuel, '
+                'exploration autonome par frontières.',
     license='Apache-2.0',
     extras_require={'test': ['pytest']},
     entry_points={
         'console_scripts': [
             'target_follower = robot_mobile_control.target_follower:main',
+            'explorer = robot_mobile_control.explorer:main',
         ],
     },
 )

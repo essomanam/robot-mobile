@@ -8,6 +8,8 @@ Puis, dans RViz : « 2D Goal Pose » pour envoyer un but. Arguments utiles :
   use_depth:=false     LiDAR seul (sans le nuage de points de la caméra de profondeur)
   initial_pose:="x y z roulis tangage lacet"   pose de départ dans la carte (sinon RTAB-Map
                        se relocalise seul, grâce à la carte faite dans les deux sens, D-015)
+  slam_mode:=mapping   cartographie pendant la navigation (exploration d'un lieu inconnu) :
+                       RTAB-Map part d'une carte vide et ÉCRASE la base map_database
 """
 
 import os
@@ -58,10 +60,15 @@ def launch_setup(context):
     bringup = get_package_share_directory('robot_mobile_bringup')
     nav2 = get_package_share_directory('nav2_bringup')
     use_depth = LaunchConfiguration('use_depth').perform(context).lower() == 'true'
+    slam_mode = LaunchConfiguration('slam_mode').perform(context)
+    if slam_mode not in ('localization', 'mapping'):
+        raise RuntimeError(f'slam_mode inconnu : {slam_mode} (localization ou mapping)')
 
+    # localization : carte figée de E2 ; mapping : carte construite pendant la navigation
     localization = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(bringup, 'launch', 'slam.launch.py')),
-        launch_arguments={'method': 'rtabmap_rgbd_scan', 'localization': 'true',
+        launch_arguments={'method': 'rtabmap_rgbd_scan',
+                          'localization': 'true' if slam_mode == 'localization' else 'false',
                           'database_path': LaunchConfiguration('map_database'),
                           'initial_pose': LaunchConfiguration('initial_pose')}.items())
 
@@ -91,7 +98,8 @@ def launch_setup(context):
 
     rviz = Node(
         package='rviz2', executable='rviz2', output='screen',
-        arguments=['-d', os.path.join(nav2, 'rviz', 'nav2_default_view.rviz')],
+        arguments=['-d', LaunchConfiguration('rviz_config').perform(context)
+                   or os.path.join(nav2, 'rviz', 'nav2_default_view.rviz')],
         parameters=[{'use_sim_time': True}], condition=IfCondition(LaunchConfiguration('rviz')))
 
     return [localization, depth_cloud, navigation, lifecycle_manager, rviz]
@@ -100,11 +108,16 @@ def launch_setup(context):
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('map_database',
-                              description='Carte RTAB-Map (.db), modifiée sur place'),
+                              description='Carte RTAB-Map (.db) : lue et modifiée (localization) '
+                                          'ou créée, en écrasant le fichier (mapping)'),
+        DeclareLaunchArgument('slam_mode', default_value='localization',
+                              description='localization (carte existante) ou mapping'),
         DeclareLaunchArgument('use_depth', default_value='true',
                               description='Obstacles vus par la caméra de profondeur'),
         DeclareLaunchArgument('initial_pose', default_value='',
                               description='Pose de départ dans la carte (vide = relocalisation)'),
         DeclareLaunchArgument('rviz', default_value='false'),
+        DeclareLaunchArgument('rviz_config', default_value='',
+                              description='Configuration RViz (vide = celle de Nav2)'),
         OpaqueFunction(function=launch_setup),
     ])

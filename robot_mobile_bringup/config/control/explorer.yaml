@@ -1,0 +1,13 @@
+# Exploration autonome par frontières (nœud robot_mobile_control/explorer).
+explorer:
+  ros__parameters:
+    use_sim_time: true
+    map_frame: map
+    robot_frame: base_footprint
+    min_frontier_size: 10    # cases : plus petite zone de frontière visée (10 x 5 cm = 0,5 m)
+    min_distance: 0.5        # m : distance plancher du score taille / distance
+    goal_timeout: 60.0       # s : au-delà, le but est abandonné et mis sur liste noire
+    blacklist_radius: 0.5    # m : disque masqué autour d'un but déjà essayé ; une frontière est
+                             # « explorée » s'il ne reste aucune case frontière à cette distance du but
+    min_known_area: 1.0      # m² : en dessous, la carte est jugée encore vide (démarrage)
+    update_period: 1.0       # s : période de la boucle (frontières, choix du but)
