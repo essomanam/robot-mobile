@@ -8,9 +8,6 @@ L'objectif est de rendre un robot **TurtleBot3** autonome en s'appuyant principa
 localiser (V-SLAM), se diriger vers des cibles repérées à la caméra, éviter les obstacles imprévus
 grâce à la profondeur. Le travail est développé en simulation (Gazebo) puis validé sur le robot réel.
 
-> 📚 **Documentation complète : [`docs/`](docs/README.md)** — analyse du sujet, méthode, choix
-> justifiés, résultats, étape par étape.
-
 ## Avancement
 
 | Étape | Contenu | Statut |
@@ -23,15 +20,27 @@ grâce à la profondeur. Le travail est développé en simulation (Gazebo) puis 
 | E5 | Validation sur le robot réel | ⚪ à faire |
 | E6 | Rapport technique et démonstration | ⚪ à faire |
 
-Détail et critères : [feuille de route](docs/04_feuille_de_route.md).
-
 ## Structure du dépôt
+
+Ce dépôt regroupe plusieurs paquets ROS 2. Comme tout dépôt ROS, il se clone dans le dossier
+`src/` d'un workspace colcon ; la compilation produit `build/`, `install/` et `log/` à la racine
+du workspace, en dehors du dépôt :
+
+```
+as52_ws/                          workspace colcon (non versionné)
+├── src/
+│   └── robot-mobile/             ce dépôt
+├── build/                        fichiers intermédiaires de compilation
+├── install/                      paquets compilés, chargés par `source install/setup.bash`
+└── log/                          journaux de colcon
+```
+
+Contenu du dépôt :
 
 ```
 robot-mobile/
 ├── README.md                     ce fichier : présentation et manuel d'exécution
 ├── LICENSE.md                    licence Apache-2.0
-├── docs/                         documentation scientifique du projet
 ├── robot_mobile_description/     le robot : TurtleBot3 Waffle + caméra RGB-D
 │   ├── urdf/                     description pour ROS (TF, RViz)
 │   └── models/robot_mobile/      modèle pour Gazebo (physique, capteurs)
@@ -48,8 +57,6 @@ robot-mobile/
     └── test/                     tests des métriques (ATE, RPE, marges) et du style
 ```
 
-Organisation détaillée : [architecture](docs/03_architecture_cible.md#5-organisation-proposée-du-dépôt).
-
 ## Environnement requis
 
 | Composant | Version |
@@ -59,33 +66,41 @@ Organisation détaillée : [architecture](docs/03_architecture_cible.md#5-organi
 | Gazebo | Jetty (gz-sim 10) |
 | Python | 3.14 |
 
-Liste complète, paquets à installer et points de vigilance :
-[docs/01_environnement_logiciel.md](docs/01_environnement_logiciel.md).
-
 ## Installation et compilation
+
+Le workspace peut être placé n'importe où ; les commandes ci-dessous utilisent `~/as52_ws`.
 
 ```bash
 # 1. Charger ROS 2
 source /opt/ros/lyrical/setup.bash
 
-# 2. Récupérer le dépôt
-git clone https://github.com/essomanam/robot-mobile.git
-cd robot-mobile
+# 2. Créer le workspace et cloner le dépôt dans src/
+mkdir -p ~/as52_ws/src
+git clone https://github.com/essomanam/robot-mobile.git ~/as52_ws/src/robot-mobile
 
 # 3. Installer les dépendances déclarées par les paquets
 #    (première fois seulement : sudo rosdep init && rosdep update)
-rosdep install --from-paths . --ignore-src -y
+cd ~/as52_ws
+rosdep install --from-paths src --ignore-src -y
 
-# 4. Compiler, puis charger le résultat
+# 4. Compiler depuis la racine du workspace (jamais depuis src/), puis charger le résultat
 colcon build --symlink-install
 source install/setup.bash
 ```
 
-Vérification : `ros2 pkg prefix robot_mobile_bringup` doit afficher le chemin du paquet installé.
+Vérification : `ros2 pkg prefix robot_mobile_bringup` doit afficher
+`~/as52_ws/install/robot_mobile_bringup`.
+
+Recompiler (`colcon build --symlink-install`, depuis `~/as52_ws`) après l'ajout d'un fichier ou
+la modification d'un `package.xml`, `setup.py` ou `CMakeLists.txt`. Grâce à `--symlink-install`,
+la modification d'un fichier existant (Python, YAML, launch) est prise en compte sans recompiler.
 
 ## Utilisation
 
-Dans chaque terminal : `source /opt/ros/lyrical/setup.bash && source install/setup.bash`.
+Dans chaque terminal : `source /opt/ros/lyrical/setup.bash && source ~/as52_ws/install/setup.bash`.
+
+Les commandes `ros2` fonctionnent ensuite depuis n'importe quel dossier. Les chemins de scripts
+(`robot_mobile_bringup/scripts/...`) sont relatifs à la racine du dépôt (`~/as52_ws/src/robot-mobile`).
 
 ### Simulation (étape E1)
 
@@ -122,7 +137,7 @@ Compare les distances mesurées par le LiDAR et la caméra de profondeur aux dis
 
 ```bash
 ros2 launch robot_mobile_bringup reference_dataset.launch.py
-ros2 run robot_mobile_evaluation analyze_dataset ~/as52_data/rosbags/<enregistrement> docs/figures
+ros2 run robot_mobile_evaluation analyze_dataset ~/as52_data/rosbags/<enregistrement> ~/as52_data/figures
 ```
 
 La première commande lance la simulation sans fenêtre, fait faire au robot un tour de salle
@@ -157,7 +172,7 @@ nord-est) :
 ```bash
 # 1. enregistrer le second parcours (≈ 3 min, sans fenêtre)
 ros2 launch robot_mobile_bringup reference_dataset.launch.py \
-    trajectory:=$PWD/install/robot_mobile_bringup/share/robot_mobile_bringup/config/localization_trajectory.yaml \
+    trajectory:=$(ros2 pkg prefix robot_mobile_bringup)/share/robot_mobile_bringup/config/localization_trajectory.yaml \
     x:=2.8 y:=1.8 yaw:=-1.5708 output:=~/as52_data/rosbags/E2_localisation
 
 # 2. localisation dans la carte d'un essai de cartographie, puis évaluation
@@ -188,7 +203,7 @@ sens), Nav2 avec le LiDAR et la caméra de profondeur :
 
 ```bash
 ros2 launch robot_mobile_bringup simulation.launch.py \
-    world:=$PWD/install/robot_mobile_bringup/share/robot_mobile_bringup/worlds/as52_room_obstacles.sdf
+    world:=$(ros2 pkg prefix robot_mobile_bringup)/share/robot_mobile_bringup/worlds/as52_room_obstacles.sdf
 ros2 launch robot_mobile_bringup navigation.launch.py map_database:=<carte>.db rviz:=true
 # puis « 2D Goal Pose » dans RViz ; use_depth:=false pour le LiDAR seul
 robot_mobile_bringup/scripts/run_navigation_trials.sh ~/as52_data/nav_trials/E4 <carte>.db   # essais mesurés
@@ -197,6 +212,21 @@ robot_mobile_bringup/scripts/run_costmap_snapshots.sh ~/as52_data/nav_trials/E4_
 
 Construire la carte (deux sens, ≈ 4 min, sans fenêtre) :
 `ros2 launch robot_mobile_bringup mapping_session.launch.py output:=~/as52_data/maps/carte`.
+
+### Exploration autonome d'un lieu inconnu (en cours, D-018)
+
+Le robot démarre sans carte, cartographie en naviguant (RTAB-Map + Nav2) et va de frontière en
+frontière (limites entre le connu et l'inconnu) jusqu'à ce qu'il n'en reste plus :
+
+```bash
+ros2 launch robot_mobile_bringup exploration.launch.py world:=arena    # arène TurtleBot3
+ros2 launch robot_mobile_bringup exploration.launch.py world:=house    # maison, plusieurs pièces
+ros2 launch robot_mobile_bringup exploration.launch.py world:=as52_room
+```
+
+La carte est écrite dans `~/as52_data/exploration/<monde>/rtabmap.db` (écrasée à chaque lancement).
+RViz affiche les frontières (orange) et le but en cours (vert). La détection des frontières
+(`robot_mobile_control/frontiers.py`) est à écrire : `python3 -m pytest robot_mobile_control/test/test_frontiers.py`.
 
 ## Auteur
 
